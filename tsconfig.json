@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "Classic",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "typeRoots" : ["./node_modules/@types"],
+    "types" : ["d3"],
+    "outDir": "./lib"
+  },
+  "include": [
+    "src/calculate.ts",
+    "src/commons.ts",
+    "src/custom-d3.ts",
+    "src/feature-viewer.ts",
+    "src/fillsvg.ts",
+    "src/helper.ts",
+    "src/index.ts",
+    "src/interfaces.ts",
+    "src/tooltip.ts",
+    "src/transition.ts"
+  ],
+  "exclude": ["node_modules", "**/__tests__/*"]
+}

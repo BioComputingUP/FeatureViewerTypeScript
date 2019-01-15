@@ -1,0 +1,7 @@
+/* styles.css */
+
+@value primary: red;
+
+.myClass {
+    color: primary;
+}

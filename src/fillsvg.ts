@@ -187,7 +187,7 @@ class FillSVG extends ComputingFunctions {
             hasSubFeatures: object.hasSubFeatures,
             tooltip: object.tooltip,
             title: object.name,
-            featureId: object.featureId,
+            id: object.id,
             y: thisYPosition,
             filter: object.filter,
             flagColor: object.flagColor,
@@ -271,7 +271,7 @@ class FillSVG extends ComputingFunctions {
 
         // var threeArray = [showDisorderContentTag, showViewerTag, showLinkTag];
 
-        let id = 't' + object.featureId + "_tagarea";
+        let id = 't' + object.id + "_tagarea";
         this.commons.tagsContainer.append("g")
             .attr("class", "tagGroup")
             .attr("id", id)
@@ -472,7 +472,7 @@ class FillSVG extends ComputingFunctions {
             .attr("id", () => {
                 // random string
                 // return divId + '_' + d.title.split(" ").join("_") + '_g'
-                return 'c' + object.featureId + '_container'
+                return 'c' + object.id + '_container'
             });
         // commenting to dist
 
@@ -518,7 +518,7 @@ class FillSVG extends ComputingFunctions {
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
                 // add id to object
-                let id = "f_" + object.featureId + Math.random().toString(36).substring(7);
+                let id = "f_" + object.id + Math.random().toString(36).substring(7);
                 d.id = id;
                 d.tooltip = d.tooltip;
                 return id;
@@ -593,7 +593,7 @@ class FillSVG extends ComputingFunctions {
             .attr("id", () => {
                 // random string
                 // return divId + '_' + d.title.split(" ").join("_") + '_g'
-                return 'c' + object.featureId + '_container'
+                return 'c' + object.id + '_container'
             });
 
         let dataLine = [];
@@ -622,7 +622,7 @@ class FillSVG extends ComputingFunctions {
             .attr("clip-path", "url(#clip)")
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                return "f_" + object.featureId + Math.random().toString(36).substring(7);
+                return "f_" + object.id + Math.random().toString(36).substring(7);
             })
             .attr("x", (d) => {
                 return this.commons.scaling(d.x - 0.4)
@@ -648,7 +648,7 @@ class FillSVG extends ComputingFunctions {
             .attr("id", () => {
                 // random string
                 // return divId + '_' + d.title.split(" ").join("_") + '_g'
-                return 'c' + object.featureId + '_container'
+                return 'c' + object.id + '_container'
             });
 
         let dataLine = [];
@@ -679,7 +679,7 @@ class FillSVG extends ComputingFunctions {
             //.attr("clip-path", "url(#clip)")
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                return "f_" + object.featureId + Math.random().toString(36).substring(7);
+                return "f_" + object.id + Math.random().toString(36).substring(7);
             })
             // circle dimensions
             .attr("cx", (d) => {
@@ -725,7 +725,7 @@ class FillSVG extends ComputingFunctions {
             .attr("id", () => {
                 // random string
                 // return divId + '_' + d.title.split(" ").join("_") + '_g'
-                return 'c' + object.featureId + '_container'
+                return 'c' + object.id + '_container'
             });
 
         let dataLine = [{
@@ -756,7 +756,7 @@ class FillSVG extends ComputingFunctions {
             .attr("clip-path", "url(#clip)")
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                return "f_" + d[0].featureId + Math.random().toString(36).substring(7);
+                return "f_" + d[0].id + Math.random().toString(36).substring(7);
             })
             .attr("d", this.commons.lineBond)
             .style("fill", "none")
@@ -778,7 +778,7 @@ class FillSVG extends ComputingFunctions {
         if (object.fill === undefined) object.fill = true;
         let histoG = this.commons.svgContainer.append("g")
         // necessary id to get height when placing tags
-            .attr("id", () => {return 'c' + object.featureId + '_container'})
+            .attr("id", () => {return 'c' + object.id + '_container'})
             .attr("class", "lining featureLine")
             .attr("transform", "translate(0," + position + ")")
             .attr("heigth", object.curveHeight);
@@ -899,7 +899,7 @@ class FillSVG extends ComputingFunctions {
             .attr("clip-path", "url(#clip)")
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                return "f_" + object.featureId + Math.random().toString(36).substring(7);
+                return "f_" + object.id + Math.random().toString(36).substring(7);
             })
             .attr("x", (d) => {
                 return this.commons.scaling(d.x);

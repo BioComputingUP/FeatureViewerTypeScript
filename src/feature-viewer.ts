@@ -7,9 +7,11 @@
 //import * as d3 from 'd3';
 import * as d3 from './custom-d3'
 import {event as currentEvent} from 'd3-selection';
+import * as _ from 'underscore';
 
 import {UserOptions} from './interfaces';
 import {FeaturesList, FeatureObject} from './interfaces';
+import {FeatureViewerLog} from './interfaces';
 import Commons from './commons';
 import {Transition, SubfeaturesTransition} from "./transition";
 import FillSVG from "./fillsvg";
@@ -34,6 +36,38 @@ class FeatureViewer {
     private calculate: Calculate;
     private tool: Tool;
 
+    private unflatten = function( array: FeaturesList, parent=null, processedIds=null, tree=null ){
+
+        tree = tree !== null ? tree : [];
+        parent = parent !== null ? parent : { id: 0 };
+        processedIds = processedIds !== null ? processedIds : new Set();
+
+        var children = _.filter( array, (child) => {
+            if (child.parentId === undefined) {
+                child.parentId = 0
+            }
+            if (child.parentId === parent.id) {
+                processedIds.add(child.id)
+            }
+            return child.parentId == parent.id;
+        });
+
+        if( !_.isEmpty( children )  ){
+            if( parent.id == 0 ){
+                tree = children;
+            }else{
+                parent['children'] = children
+            }
+            _.each( children, ( child ) => { this.unflatten( array, child, processedIds ) } );
+        }
+
+        let res = {
+            tree:tree,
+            ids:processedIds
+        }
+
+        return res;
+    }
 
     private parseUserOptions(options: UserOptions): void {
 
@@ -192,7 +226,7 @@ class FeatureViewer {
                 if (d.title === "Sequence") {
                     return 'sequence'
                 } else {
-                    return d.featureId
+                    return d.id
                 }
             })
             .attr("class", "flag")
@@ -300,14 +334,14 @@ class FeatureViewer {
     private clickFlagFunction(d) {
 
         // dispatches selected flag event
-        let id = d.featureId;
+        let id = d.id;
         // show animation in flag
         this.loadingFlag(id);
         let flag_detail_object = {
             points: this.calculate.yxPoints(d),
             y: d.y,
-            featureId: d.featureId,
-            id: d.title,
+            id: d.id,
+            label: d.title,
             flagLevel: d.flagLevel
         };
         // trigger flag_selected event
@@ -315,7 +349,7 @@ class FeatureViewer {
             let eventDetail = {detail: flag_detail_object},
                 event = new CustomEvent(this.commons.events.FLAG_SELECTED_EVENT, eventDetail);
 
-            this.commons.flagSelected.push(flag_detail_object.featureId);
+            this.commons.flagSelected.push(flag_detail_object.id);
             this.commons.svgElement.dispatchEvent(event);
 
         } else {
@@ -996,7 +1030,7 @@ class FeatureViewer {
                 className: "AA",
                 color: "black",
                 type: "sequence",
-                featureId: "sequence"
+                id: "sequence"
             });
             this.commons.yData.push({
                 title: "Sequence",
@@ -1101,8 +1135,8 @@ class FeatureViewer {
         //object.height = this.commons.elementHeight;
         object.flagLevel = flagLevel;
 
-        if (!object.featureId) {
-            object.featureId = 'f' + Math.random().toString(36).substring(7);
+        if (!object.id) {
+            object.id = 'f' + Math.random().toString(36).substring(7);
         }
         if (position) {
             this.commons.features.splice(position, 0, object);
@@ -1158,12 +1192,12 @@ class FeatureViewer {
 
             if (childfeat['flagLevel'] > parent['flagLevel']) {
 
-                let featureId = childfeat['featureId'];
+                let id = childfeat['id'];
 
                 // remove from feature array and from html
-                d3.select(`#t${featureId}_tagarea`).remove();
-                d3.select(`#c${featureId}_container`).remove();
-                d3.select(`#${featureId}`).remove();
+                d3.select(`#t${id}_tagarea`).remove();
+                d3.select(`#c${id}_container`).remove();
+                d3.select(`#${id}`).remove();
 
                 this.commons.features.splice(i, 1);
                 this.commons.yData.splice(i, 1);
@@ -1181,7 +1215,7 @@ class FeatureViewer {
     private feature_transition_data(featuresToMove, start) {
 
         featuresToMove.forEach(f => {
-            let feature_id = f['featureId'];
+            let feature_id = f['id'];
             // once for each feature
 
             // area with buttons
@@ -1402,23 +1436,32 @@ class FeatureViewer {
      * @property {string} [feature.links.<Object>.message] - The message for tooltip
      * @property {string} [feature.links.<Object>.color] - Optional color for the visualized glyphicon
      */
-    // TODO: path currently not supported
-    public addFeature(object, flagLevel = 1) {
+    public addFeature(object: FeatureObject) {
 
-        this.addFeatureCore(object, flagLevel);
-        // check presence of both hasSubfeatures and hasChildren
-        if (this.commons.viewerOptions.showSubFeatures && object.hasSubFeatures) { object.hasChildren === true }
-        this.updateXAxis(this.commons.YPosition);
-        this.updateSVGHeight(this.commons.YPosition);
+        // check if parent or children feature
+        if (object.parentId) {
 
-        if (this.commons.viewerOptions.brushActive) {
-            this.commons.svgContainer.selectAll(".brush rect")
-                .attr('height', this.commons.YPosition + 50);
+            // this is a subfeature
+
+        } else {
+
+            this.addFeatureCore(object);
+            // TODO temporary solution
+
+
+            this.updateXAxis(this.commons.YPosition);
+            this.updateSVGHeight(this.commons.YPosition);
+
+            if (this.commons.viewerOptions.brushActive) {
+                this.commons.svgContainer.selectAll(".brush rect")
+                    .attr('height', this.commons.YPosition + 50);
+            }
+            if (this.commons.viewerOptions.verticalLine) d3.selectAll(".VLine").style("height", (this.commons.YPosition + 50) + "px");
+            if (d3.selectAll(".element") && d3.selectAll(".element")['_groups'].length > 1500) this.commons.animation = false;
+
         }
-        if (this.commons.viewerOptions.verticalLine) d3.selectAll(".VLine").style("height", (this.commons.YPosition + 50) + "px");
-        if (d3.selectAll(".element") && d3.selectAll(".element")['_groups'].length > 1500) this.commons.animation = false;
 
-        return object.featureId
+        return object.id
 
     }
 
@@ -1452,7 +1495,7 @@ class FeatureViewer {
      * @property {string} [target.subfeatures.<SubfeatureObject>.link.message] - The message for tooltip
      * @property {string} [target.subfeatures.<SubfeatureObject>.link.color] - Optional color for the visualized glyphicon
      */
-    public addSubFeature(object) {
+    private addSubFeature(object) {
 
         // stop flag loading
         d3.select(`#${this.divId}`).select(`#${object.parentId}`)
@@ -1469,7 +1512,7 @@ class FeatureViewer {
             // get position of parent feature and move whatever is under
             // retrieve parent feature
             let elementPos = this.commons.features.map(function (x) {
-                return x["featureId"];
+                return x["id"];
             }).indexOf(parent_id);
             let thisFeature = this.commons.features[elementPos];
 
@@ -1567,8 +1610,33 @@ class FeatureViewer {
     public addFeatures(flist: FeaturesList) {
 
         // check ids are unique
-        const unique = [...new Set(flist.map(item => item.featureId))];
-        console.log(unique)
+        const uniqueIds = [...new Set(flist.map(item => item.id))];
+        if (uniqueIds.length !== flist.length) {
+
+            this.commons.logger.error("Feature ids are not unique", {method:'addFeatures',fvId:this.divId})
+
+        } else {
+
+            // add to viewer
+            let unflatted = this.unflatten(flist);
+            this.commons.features = unflatted.tree;
+            let ftsIds = unflatted.ids;
+
+            // check if features are missing from the tree
+            let unprocessedIds = uniqueIds.filter((x)=>{
+                return !(ftsIds.has(x))
+            });
+            if (unprocessedIds.length !== 0) {
+                this.commons.logger.error("Subfeatures with no known parentId", {method:'addFeatures',fvId:this.divId,features:unprocessedIds})
+            }
+
+            // draw the viewer
+            this.commons.features.forEach((ft)=>{
+               this.addFeature(ft)
+            });
+
+
+        }
 
     }
 
@@ -1583,6 +1651,7 @@ class FeatureViewer {
 
         // read divId
         this.divId = div.slice(1).toString();
+        this.commons.logger = new FeatureViewerLog(); // TODO this.divId as input
 
         // sequence and seq length
         if (typeof sequence === 'string') {

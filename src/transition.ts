@@ -31,7 +31,7 @@ export class Transition extends ComputingFunctions {
 
     public basalLine(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         if (object.type === "unique" || object.type === "circle") {
             container.selectAll(".line" + object.className)
                 .attr("d", this.commons.line.x((d) => {
@@ -46,7 +46,7 @@ export class Transition extends ComputingFunctions {
 
     public rectangle(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         // line does not require transition
 
         let transit1, transit2;
@@ -85,7 +85,7 @@ export class Transition extends ComputingFunctions {
 
     public multiRec(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         container.selectAll("." + object.className)
             .attr("x",  (d) => {
                 return this.commons.scaling(d['x'])
@@ -98,7 +98,7 @@ export class Transition extends ComputingFunctions {
 
     public unique(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         // line does not require transition
 
         let transit;
@@ -123,7 +123,7 @@ export class Transition extends ComputingFunctions {
 
     public circle(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         // line does not require transition
 
         let transit;
@@ -148,7 +148,7 @@ export class Transition extends ComputingFunctions {
 
     public path(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         container.selectAll(".line" + object.className)
             .attr("d", this.commons.lineBond.x((d) => {
                     return this.commons.scaling(d['x']);
@@ -174,7 +174,7 @@ export class Transition extends ComputingFunctions {
 
     public lineTransition(object) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
 
         // keep height
         this.commons.lineYScale.range([0, -(object.height)]).domain([0, -(object.level)]);
@@ -209,7 +209,7 @@ export class Transition extends ComputingFunctions {
 
     public text(object, start) {
 
-        let container = this.commons.svgContainer.select(`#c${object.featureId}_container`);
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
         let transit;
         if (this.commons.animation) {
             transit = container.selectAll("." + object.className)

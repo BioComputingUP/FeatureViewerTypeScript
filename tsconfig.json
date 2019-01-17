@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "target": "es2015",
     "module": "commonjs",
     "moduleResolution": "Classic",
@@ -8,7 +9,10 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "typeRoots" : ["./node_modules/@types"],
-    "types" : ["d3"],
+    "types" : [
+      "d3",
+      "underscore"
+    ],
     "outDir": "./lib"
   },
   "include": [

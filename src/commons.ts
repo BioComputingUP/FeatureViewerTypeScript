@@ -1,4 +1,4 @@
-import {FeatureObject, ViewerOptions, FeaturesList, FeatureData} from './interfaces';
+import {FeatureObject, ViewerOptions, FeaturesList, FeatureData, FeatureViewerLog} from './interfaces';
 
 // let commons: Commons;
 
@@ -89,9 +89,10 @@ class Commons {
     public calculatedTransitions: any={}
     public d3helper: any={};
     public style: any;
-
+    public logger: any;
 
     private _current_extend = null;
+
     public get current_extend() {
         let extend = this._current_extend;
         this._current_extend = null;

@@ -4,7 +4,6 @@
 //import './css/tooltip.css'
 //import './css/bootstrap.css'
 
-//import * as d3 from 'd3';
 import * as d3 from './custom-d3'
 import {event as currentEvent} from 'd3-selection';
 import * as _ from 'underscore';
@@ -20,7 +19,6 @@ import Tool from "./tooltip";
 
 
 import * as fvstyles from './../assets/fv.scss';
-//import * as fvstyles from './../assets/fv';
 
 
 
@@ -35,6 +33,20 @@ class FeatureViewer {
     private fillSVG: FillSVG;
     private calculate: Calculate;
     private tool: Tool;
+
+    private searchTree(element, matchingId){
+        if (element.id == matchingId) {
+            return element;
+        } else if (element.subfeatures) {
+            var i;
+            var result = null;
+            for (i = 0; result == null && i < element.subfeatures.length; i++) {
+                result = this.searchTree(element.subfeatures[i], matchingId);
+            }
+            return result;
+        }
+        return null;
+    }
 
     private unflatten = function( array: FeaturesList, parent=null, processedIds=null, tree=null ){
 
@@ -56,7 +68,7 @@ class FeatureViewer {
             if( parent.id == 0 ){
                 tree = children;
             }else{
-                parent['children'] = children
+                parent['subfeatures'] = children
             }
             _.each( children, ( child ) => { this.unflatten( array, child, processedIds ) } );
         }
@@ -75,14 +87,13 @@ class FeatureViewer {
             'showAxis',
             'showSequence',
             'brushActive',
-            'bubbleHelp',
+            'toolbar',
+            'toolbarPosition',
             'zoomMax',
             'showSubFeatures',
             'flagColor',
             'flagTrack',
-            'showLinkTag',
-            'showDisorderContentTag',
-            'buttonTrack',
+            'sideBar',
             'animation'
         ];
 
@@ -92,12 +103,16 @@ class FeatureViewer {
             }
         }
 
+        if (options.breakpoint) {
+            this.commons.mobilesize = options.breakpoint;
+        }
+
         this.commons.viewerOptions.offset = {start: 0, end: this.commons.fvLength + 1};
         if (options && options.offset) {
             this.commons.viewerOptions.offset = options.offset;
             if (options.offset.start < 1) {
                 this.commons.viewerOptions.offset.start = 1;
-                console.warn("WARNING ! offset.start should be > 0. Thus, it has been reset to 1.");
+                this.commons.logger.warn("Offset.start should be > 0. Thus, it has been reset to 1.", {fvId:this.divId});
             }
         }
 
@@ -111,25 +126,31 @@ class FeatureViewer {
             this.commons.animation = options.animation;
         }
 
+        if (!this.commons.viewerOptions.brushActive) {
+            this.commons.viewerOptions.brushActive = true
+        }
+
+        // set width of sidebar
         this.commons.viewerOptions.tagsTrackWidth = 0;
-        if (options && options.buttonTrack) {
-            if (typeof options.buttonTrack === 'string') {
-                this.commons.viewerOptions.tagsTrackWidth = Number(options.buttonTrack.match(/[0-9]+/g)[0]);
-            } else if (typeof  options.buttonTrack === 'number') {
-                this.commons.viewerOptions.tagsTrackWidth = options.buttonTrack;
-            } else if (typeof  options.buttonTrack === 'boolean') {
-                if (options.buttonTrack) {
+        if (options && options.sideBar) {
+            if (typeof options.sideBar === 'string') {
+                this.commons.viewerOptions.tagsTrackWidth = Number(options.sideBar.match(/[0-9]+/g)[0]);
+            } else if (typeof  options.sideBar === 'number') {
+                this.commons.viewerOptions.tagsTrackWidth = options.sideBar;
+            } else if (typeof  options.sideBar === 'boolean') {
+                if (options.sideBar) {
                     this.commons.viewerOptions.tagsTrackWidth = 100;
                 } else {
                     this.commons.viewerOptions.tagsTrackWidth = 0;
                 }
             } else {
                 this.commons.viewerOptions.tagsTrackWidth = 100;
-                console.warn(`Automatically set tagsTrackWidth to ${this.commons.viewerOptions.tagsTrackWidth}`)
+                this.commons.logger.warn(`Automatically set tagsTrackWidth to ${this.commons.viewerOptions.tagsTrackWidth}`, {fvId:this.divId});
             }
         }
         this.commons.viewerOptions.backup.tagsTrackWidth = this.commons.viewerOptions.tagsTrackWidth;
 
+        // set width of flags
         this.commons.viewerOptions.labelTrackWidth = 200;
         if (options && options.flagTrack) {
             if (typeof options.flagTrack === 'string') {
@@ -140,7 +161,7 @@ class FeatureViewer {
                 this.commons.viewerOptions.labelTrackWidth = 200;
             } else {
                 this.commons.viewerOptions.labelTrackWidth = 200;
-                console.warn(`Automatically set tagsTrackWidth to ${this.commons.viewerOptions.tagsTrackWidth}`)
+                this.commons.logger.warn(`Automatically set tagsTrackWidth to ${this.commons.viewerOptions.tagsTrackWidth}`, {fvId:this.divId});
             }
         }
         this.commons.viewerOptions.backup.labelTrackWidth = this.commons.viewerOptions.labelTrackWidth;
@@ -213,15 +234,13 @@ class FeatureViewer {
 
     private updateYAxis() {
 
-        // "on click" function (clickFlagFunction) both attribute of text and flag
-        // unique ids
+        // create g
         this.commons.yAxisSVGGroup = this.commons.yAxisSVG
             .selectAll(".yAxis")
             .data(this.commons.yData)
             .enter()
             .append("g")
             .attr("id", function (d) {
-                // random string
                 // return divId + '_' + d.title.split(" ").join("_") + '_g'
                 if (d.title === "Sequence") {
                     return 'sequence'
@@ -231,12 +250,14 @@ class FeatureViewer {
             })
             .attr("class", "flag")
             .on('click', (d) => {
-                if (this.commons.viewerOptions.showSubFeatures && d.flagLevel === 1 && d.hasSubFeatures) {
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                     this.clickFlagFunction(d)
                 }
             })
             .call(this.commons.d3helper.flagTooltip());
             //.call(d3.helper.genericTooltip({}));
+
+        // create polygon
         this.commons.yAxisSVGGroup
             .append("polygon") // attach a polygon
             .attr("class", "boxshadow Arrow")
@@ -254,44 +275,38 @@ class FeatureViewer {
                 return this.commons.viewerOptions.flagColor // or flagColor
             });
 
-        let myobj = this.commons.yAxisSVGGroup
-            /*.append("g")
-            .attr("x", 0)
-            .attr("y", function (d) {
-                // vertical flag placement
-                return d.y - 12;
-            })
-            .attr("id", "chevron")
-            .html((d) => {
-                if (d.hasSubFeatures) {
-                    return this.commons.right_chevron
-                } else {
-                    return ''
+        // foreingObject for chevron
+        this.commons.yAxisSVGGroup
+            .append("g") // position
+            .attr("transform", (d) => {
+                let x = 0;
+                // horizontal flag placement
+                this.commons.headMargin = 0;
+                if (d.flagLevel) {
+                    this.commons.headMargin = 20 * (d.flagLevel - 1);
+                    x = this.commons.headMargin + 5;
                 }
-            })*/
-            .append("foreignObject")
-            .attr("x", 4)
-            .attr("y", function (d) {
                 // vertical flag placement
-                return d.y - 4;
+                let y = d.y - 4;
+                return "translate(" + x + "," + y + ")"
             })
-            .attr("width", 30)
-            .attr("height", 30)
+            .append("path")
             .attr("id", "chevron")
-            //.append('xhtml:body')
-            .html((d) => {
+            .attr("fill", "rgba(39, 37, 37, 0.71)")
+            .attr("d", (d) => {
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                    return this.commons.right_chevron
+                    if (d.isOpen) {return this.commons.down_chevron} else {return this.commons.right_chevron}
                 } else {
                     return ''
                 }
             });
 
-
-        this.commons.yAxisSVGGroup
+        // text (label)
+        /*this.commons.yAxisSVGGroup
             .append("text")
             .attr("class", "yAxis")
             .attr("font-family", "Roboto")
+            .attr("fill", "rgba(39, 37, 37, 0.9)")
             .style("display", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
@@ -304,7 +319,7 @@ class FeatureViewer {
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                     // chevron margin
-                    cvm = 22;
+                    cvm = 22
                 }
                 // horizontal flag placement
                 this.commons.headMargin = 0;
@@ -319,41 +334,86 @@ class FeatureViewer {
                 // vertical flag placement
                 return d.y + 12
             })
+            // check if label is string or html
             .text((d) => {
                 // text only if space is enough
-                return d.title;
-            });
-    };
+                return d.label;
+            });*/
 
-    private loadingFlag(id) {
-        // animation 'pulse' while loading subFeatures after clicking
-        d3.select(`#${this.divId}`).select(`#${id}`)
-            .attr("class", "loading");
+        this.commons.yAxisSVGGroup
+            .append("foreignObject")
+            .attr("class", "yAxis")
+            .style("display", (d) => {
+                // text only if space is enough
+                if (this.commons.viewerOptions.mobileMode) {
+                    return "none";
+                } else {
+                    return "block";
+                }
+            })
+            .attr("x", (d) => {
+                let cvm = 0;
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                    // chevron margin
+                    cvm = 22
+                }
+                // horizontal flag placement
+                this.commons.headMargin = 0;
+                if (d.flagLevel) {
+                    this.commons.headMargin = 20 * (d.flagLevel - 1);
+                    return cvm + this.commons.headMargin + 8;
+                } else {
+                    return cvm + 8
+                }
+            })
+            .attr("y", function (d) {
+                // vertical flag placement
+                return d.y
+            })
+            .attr("width", this.commons.viewerOptions.margin.left - 20)
+            .attr("height", this.commons.step)
+            .html((d) => {
+                // text only if space is enough
+                return d.label;
+            });
     };
 
     private clickFlagFunction(d) {
 
         // dispatches selected flag event
         let id = d.id;
-        // show animation in flag
-        this.loadingFlag(id);
         let flag_detail_object = {
             points: this.calculate.yxPoints(d),
             y: d.y,
             id: d.id,
-            label: d.title,
+            label: d.label,
             flagLevel: d.flagLevel
         };
         // trigger flag_selected event
         if (CustomEvent) {
+
             let eventDetail = {detail: flag_detail_object},
                 event = new CustomEvent(this.commons.events.FLAG_SELECTED_EVENT, eventDetail);
 
             this.commons.flagSelected.push(flag_detail_object.id);
             this.commons.svgElement.dispatchEvent(event);
 
+            // let featureToChange = this.searchTree(this.commons.features, flag_detail_object.id)
+            var i;
+            var result = null;
+            for (i = 0; result == null && i < this.commons.features.length; i++) {
+                result = this.searchTree(this.commons.features[i], flag_detail_object.id);
+            }
+            let featureToChange = result;
+            if (featureToChange) {
+                this.changeFeature(featureToChange, !featureToChange.isOpen);
+            } else {
+                this.commons.logger.warn("Feature not found in feature array", {fvId:this.divId, featureId:flag_detail_object.id})
+            }
+
+
         } else {
-            console.warn("CustomEvent is not defined....");
+            this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
         }
 
         if (this.commons.trigger) this.commons.trigger(this.commons.events.FLAG_SELECTED_EVENT, flag_detail_object);
@@ -363,7 +423,7 @@ class FeatureViewer {
 
         let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
         let thisbrush = this.commons.svgContainer.select(".brush");
-        thisbrush.selectAll("rect")
+        thisbrush.select("rect")
             .attr('height', rectArea.height)
             .attr('width', rectArea.width);
     };
@@ -373,6 +433,7 @@ class FeatureViewer {
         this.commons.svgContainer
             .append("g")
             .attr("class", "brush")
+            .attr("id", "fvbrush")
             .call(this.commons.brush)
         //.call(this.commons.brush.move, this.commons.scaling());
         this.resizeBrush()
@@ -391,7 +452,7 @@ class FeatureViewer {
 
         if (currentEvent.sourceEvent !== null && typeof currentEvent.sourceEvent.target !== "function") {
 
-            // ZOOMING CASE & REZISING FOR BUTTONS
+            // ZOOMING CASE & REZISING FOR BUTTONS (deprecated)
             // zoom: mouseup & Object (removed with check currentEvent.sourceEvent.target !== "function")
             // resizing for buttons: click
             let zoomScale;
@@ -432,8 +493,9 @@ class FeatureViewer {
                     this.transition_data(this.commons.features, currentShift);
                     this.reset_axis();
 
+                    // deprecated: not necessary
                     // remove sequence
-                    this.commons.svgContainer.selectAll(".mySequence").remove();
+                    /*this.commons.svgContainer.select(".mySequence").remove();
                     // draw sequence
                     if (this.commons.viewerOptions.showSequence) {
                         if (seqCheck === false) {
@@ -443,16 +505,18 @@ class FeatureViewer {
                             this.commons.seqShift = start;
                             this.fillSVG.sequence(this.sequence.substring(start, end), this.commons.seqShift);
                         }
-                    }
+                    }*/
 
                 } else {
 
                     zoomScale = "Prevented";
-                    console.warn("Zoom greater than " + this.commons.viewerOptions.zoomMax + " is prevented")
+                    this.commons.logger.warn("Zoom greater than " + this.commons.viewerOptions.zoomMax + " is prevented", {fvId:this.divId});
                 }
 
 
                 if (CustomEvent) {
+
+                    // zooming in
                     this.commons.svgElement.dispatchEvent(new CustomEvent(this.commons.events.ZOOM_EVENT, {
                         detail: {
                             start: start,
@@ -460,6 +524,7 @@ class FeatureViewer {
                             zoom: zoomScale
                         }
                     }));
+
                 }
                 if (this.commons.trigger) this.commons.trigger(this.commons.events.ZOOM_EVENT, {
                     start: start,
@@ -479,6 +544,7 @@ class FeatureViewer {
     }
 
     private resizeForMobile() {
+        // change flags
         let flags = d3.select(`#${this.divId}`).selectAll(".Arrow")
             .attr("points", (d) => {
                 // match points with subFeature level
@@ -503,9 +569,10 @@ class FeatureViewer {
 
         // change width now
         // let totalwidth = d3.select(`#${this.divId}`).node().getBoundingClientRect().width;
-        let myd3node = d3.select(`#${this.divId}`).node();
+        let myd3node = d3.select(`#${this.commons.divId}`).node();
         let totalwidth = (<HTMLElement>myd3node).getBoundingClientRect().width;
 
+        // resize for mobile?
         if (totalwidth < this.commons.mobilesize) {
             if (!this.commons.viewerOptions.mobileMode) {
                 this.commons.viewerOptions.mobileMode = true;
@@ -516,35 +583,45 @@ class FeatureViewer {
                 // resize for mobile
                 this.resizeForMobile();
             }
-        } else {
-            if (this.commons.viewerOptions.mobileMode) {
+        }
+        else if (this.commons.viewerOptions.mobileMode) {
                 this.commons.viewerOptions.mobileMode = false;
                 this.commons.viewerOptions.margin.left = this.commons.viewerOptions.labelTrackWidth;
                 this.commons.viewerOptions.margin.right = this.commons.viewerOptions.tagsTrackWidth;
                 // resize back to options
-                this.resizeForMobile();
-            }
+                this.resizeForMobile()
+        }
+        else {
+            // no mobile size, resize flags
+            // change flags
+            let flags = d3.select(`#${this.divId}`).selectAll(".Arrow")
+                .attr("points", (d) => {
+                    // match points with subFeature level
+                    return this.calculate.yxPoints(d)
+                });
         }
 
         this.commons.viewerOptions.width = totalwidth - this.commons.viewerOptions.margin.left - this.commons.viewerOptions.margin.right - 17;
 
+        // resize containers
         this.commons.svg
             .attr("width", totalwidth);
         this.commons.svg.select("clipPath rect")
             .attr("width", this.commons.viewerOptions.width);
         if (this.commons.viewerOptions.brushActive) {
-            d3.select(`${this.divId} .background`).attr("width", this.commons.viewerOptions.width - 10);
+            d3.select(`${this.commons.divId} .background`).attr("width", this.commons.viewerOptions.width - 10);
         }
 
-        // d3 v4
-        d3.select(`#${this.divId}`).selectAll(".brush").call(this.commons.brush.move, null);
+        // resize brush
+        d3.select(`#${this.commons.divId}`).select(".fvbrush").call(this.commons.brush.move, null);
 
+        // new scaling
         this.commons.scaling.range([2, this.commons.viewerOptions.width - 2]);
         this.commons.scalingPosition.domain([0, this.commons.viewerOptions.width]);
 
-
+        // update seq visualization
         let seq = this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
-        this.commons.svgContainer.selectAll(".mySequence").remove();
+        this.commons.svgContainer.select(".mySequence").remove();
         if (this.commons.viewerOptions.showSequence) {
             if (seq === false) {
                 this.fillSVG.sequenceLine();
@@ -556,10 +633,10 @@ class FeatureViewer {
 
 
         if (this.commons.animation) {
-            d3.select(`#${this.divId}`).select('#tags_container')
+            d3.select(`#${this.commons.divId}`).select('#tags_container')
                 .transition().duration(500)
         }
-        d3.select(`#${this.divId}`).select('#tags_container')
+        d3.select(`#${this.commons.divId}`).select('#tags_container')
             .attr("transform", "translate(" + (this.commons.viewerOptions.margin.left + this.commons.viewerOptions.width).toString() + ",10)");
 
 
@@ -586,11 +663,10 @@ class FeatureViewer {
         this.commons.scalingPosition.range([this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end]);
         let seq = this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
 
-        d3.select(`#${this.divId}`).select(".brush").call(this.commons.brush.move, null);
+        d3.select(`#${this.divId}`).select(".fvbrush").call(this.commons.brush.move, null);
 
         // remove sequence
-        this.commons.svgContainer.selectAll(".mySequence").remove();
-
+        this.commons.svgContainer.select(".mySequence").remove();
         // draw sequence
         if (this.commons.viewerOptions.showSequence) {
             if (seq === false) {
@@ -629,7 +705,9 @@ class FeatureViewer {
     }
 
     private transition_data(features, start) {
-        features.forEach(o => {
+        // no usage of start
+        // apply transition data recursively?
+        for (const o of features) {
             if (o.type === "rect") {
                 this.transition.rectangle(o);
             } else if (o.type === "multipleRect") {
@@ -645,7 +723,11 @@ class FeatureViewer {
             }
             // resize basal line too
             this.transition.basalLine(o);
-        });
+            // apply recursively to subfeatures (if shown)
+            if (o.subfeatures && o.isOpen) {
+                this.transition_data(o.subfeatures, start)
+            }
+        };
     }
 
     private reset_axis() {
@@ -684,12 +766,6 @@ class FeatureViewer {
         //    vertical.style("left", mouseX + "px")});
     }
 
-    private resizeForButtons() {
-        this.commons.viewerOptions.tagsTrackWidth = 55 + 15 * this.commons.maxNumberOfButtons + 10; // length of disorder content tag + 15 px for each button + 10 px of margin
-        this.commons.viewerOptions.margin.right = this.commons.viewerOptions.tagsTrackWidth;
-        this.updateWindow()
-    };
-
     private init(div) {
 
         // first element is 0
@@ -712,6 +788,12 @@ class FeatureViewer {
         // init objects
 
         this.tool.initTooltip(div, this.divId);
+
+        // init overlay div
+        let overlayhtml = '<div id="fvoverlay" data-container="body"></div>'
+        d3.select(`#${this.divId}`)
+            .append("foreignObject")
+            .html(overlayhtml)
 
         this.commons.lineBond = d3.line()
             .curve(d3.curveStepBefore)
@@ -777,22 +859,15 @@ class FeatureViewer {
             });
 
         this.commons.brush = d3.brushX()
-            .extent([[this.commons.scaling.range()[0], 0], [this.commons.scaling.range()[1], 1]])
+            //.extent([[this.commons.scaling.range()[0], 0], [this.commons.scaling.range()[1], 1]])
             .on("end", () => {
                 this.brushend()
             });
 
-        /*this.commons.zoom = d3.zoom()
-            .scaleExtent([1, Infinity])
-            .translateExtent([[0, 0], [width, height]])
-            .extent([[0, 0], [width, height]])
-            .on("zoom", zoomed);*/
-
-        /*let triangle = '<polygon points="5,57,5,78,235,78,243,69,235,57" style="stroke: rgb(223, 213, 245); fill: rgb(223, 213, 0);"></polygon>';
-        let translated_triangle = '<polyline points="5,57,5,78,235,78,243,69,235,57" transform="rotate(45deg)" style="stroke: rgb(223, 213, 245); fill: rgb(223, 213, 0);"></polyline>';*/
-
-        this.commons.right_chevron = '<i class="materialicons">keyboard_arrow_right</i>';
-        this.commons.down_chevron = '<i class="materialicons">keyboard_arrow_down</i>';
+        //this.commons.right_chevron = '<i class="materialicons">keyboard_arrow_right</i>';
+        //this.commons.down_chevron = '<i class="materialicons">keyboard_arrow_down</i>';
+        this.commons.right_chevron = "M12.95 10.707l0.707-0.707-5.657-5.657-1.414 1.414 4.242 4.243-4.242 4.243 1.414 1.414 4.95-4.95z"
+        this.commons.down_chevron = "M9.293 12.95l0.707 0.707 5.657-5.657-1.414-1.414-4.243 4.242-4.243-4.242-1.414 1.414z"
 
         // Define the div for the tooltip
         this.commons.tooltipDiv = d3.select(`#${this.divId}`)
@@ -804,8 +879,6 @@ class FeatureViewer {
         this.commons.style = d3.select(`#${this.divId}`)
             .append("style")
             .html(`${fvstyles}`)
-        // <style>${fvstyles}</style>
-        // `<style>${fvstyles}</style>`
 
 
         // Create SVG
@@ -813,34 +886,49 @@ class FeatureViewer {
 
             let headerOptions = document.querySelector(div + " .svgHeader") ? d3.select(div + " .svgHeader") : d3.select(div).append("div").attr("class", "svgHeader");
 
+            if (this.commons.viewerOptions.toolbarPosition) {
+                // flex-end
+                if (this.commons.viewerOptions.toolbarPosition === "right") {this.commons.viewerOptions.toolbarPosition = "flex-end"}
+                else if (this.commons.viewerOptions.toolbarPosition === "left")  {this.commons.viewerOptions.toolbarPosition = "flex-start"}
+                headerOptions.attr("style", "color: rgba(39, 37, 37, 0.71); display: flex; justify-content: " + this.commons.viewerOptions.toolbarPosition)
+            }
+            else {
+                headerOptions.attr("style", "color: rgba(39, 37, 37, 0.71);");
+            }
+
+            // position
             if (!document.querySelector(div + ' .header-position')) {
 
                 let headerPosition = headerOptions
                     .append("div")
                     .attr("class", "header-position")
                     .style("display", "inline-block")
-                    .style("margin", "15px 10px 0px")
-                    .style("padding", "0px")
-                    .style("line-height", "32px");
-                headerPosition
+                    .style("padding-top", "5px")
+                let button = headerPosition
                     .append("div")
                     .attr("class", "position-label")
-                    .style("padding", "0px 5px")
                     .style("display", "inline-block")
-                    .style("padding", "0px")
-                    .style("font-weight", "700")
-                    .text("Position  :  ");
+                button
+                    // draw icon
+                    .append("svg")
+                    .attr("class", "helperButton")
+                    .append("path")
+                    .attr("d", "M10 20s-7-9.13-7-13c0-3.866 3.134-7 7-7s7 3.134 7 7v0c0 3.87-7 13-7 13zM10 9c1.105 0 2-0.895 2-2s-0.895-2-2-2v0c-1.105 0-2 0.895-2 2s0.895 2 2 2v0z");
+                button
+                    .append("text")
+                    .text("Position:")
                 headerPosition
                     .append("div")
                     .style("display", "inline-block")
-                    .style("padding", "0px")
                     .style("padding-left", "5px")
                     .append("div")
-                    .style("min-width", "50px")
+                    .style("padding-right", "15px")
+                    .style("width", "80px") // fix width otherwise responsive to length number;
                     .attr("id", "zoomPosition")
-                    .text("0");
+                    .text("0")
             }
 
+            //zoom
             let headerZoom;
             if (!document.querySelector(div + ' .header-zoom')) {
 
@@ -848,80 +936,72 @@ class FeatureViewer {
                     .append("div")
                     .attr("class", "header-zoom")
                     .style("display", "inline-block")
-                    .style("margin", "15px 0px 0px")
-                    .style("padding", "0px")
-                    .style("line-height", "32px");
-                headerZoom
+                    .style("padding-top", "5px");
+                let button = headerZoom
                     .append("div")
                     .attr("class", "zoom-label")
-                    .style("padding", "0px 5px")
                     .style("display", "inline-block")
-                    .style("padding", "0px")
-                    .style("font-weight", "700")
-                    .text("Zoom : ");
+                button
+                    // draw icon
+                    .append("svg")
+                    .attr("class", "helperButton")
+                    .append("path")
+                    .attr("d", "M12.9 14.32c-1.34 1.049-3.050 1.682-4.908 1.682-4.418 0-8-3.582-8-8s3.582-8 8-8c4.418 0 8 3.582 8 8 0 1.858-0.633 3.567-1.695 4.925l0.013-0.018 5.35 5.33-1.42 1.42-5.33-5.34zM8 14c3.314 0 6-2.686 6-6s-2.686-6-6-6v0c-3.314 0-6 2.686-6 6s2.686 6 6 6v0z");
+                button
+                    .append("text")
+                    .text("Zoom:")
 
                 headerZoom
                     .append("div")
                     .style("display", "inline-block")
-                    .style("padding", "0px")
                     .append("div")
-                    .style("min-width", "50px")
                     .style("padding-left", "5px")
+                    .style("width", "80px") // fix width otherwise responsive to length number;
                     .append("span")
                     .text("x ")
                     .append("span")
+                    .style("padding-right", "15px")
                     .attr("class", "zoomUnit")
                     .text("1");
             }
 
-            headerZoom = document.querySelector(div + ' .header-zoom') ? d3.select(div + ' .header-zoom') : headerOptions;
+            // help
+            if (!document.querySelector(div + ' .header-help')) {
 
-            if (this.commons.viewerOptions.bubbleHelp) {
-                if (!document.querySelector(div + ' .header-help')) {
+                let headerHelp = headerOptions
+                    .append("div")
+                    .attr("class", "header-help")
+                    .style("display", "inline-block")
 
-                    let headerHelp = headerOptions
-                        .append("div")
-                        .attr("class", "header-help")
-                        .style("display", "inline-block")
-                        .style("margin", "0px")
-                        .style("margin-right", "5px")
-                        .style("padding-right", "10px")
-                        .style("bottom", "0")
-                        .style("float", "right");
+                headerHelp
+                    .append("button")
+                    .attr("class", "mybuttoncircle")
+                    .attr("id", "downloadButton")
+                    .on("click", () => {
+                        this.downloadSVG()
+                    })
+                    // draw icon
+                    .append("svg")
+                    .attr("class", "helperButton")
+                    .append("path")
+                    .attr("d", "M13 8v-6h-6v6h-5l8 8 8-8h-5zM0 18h20v2h-20v-2z")
 
 
-
-                    let downloadhtml = '<button id="downloadButton" class="mybutton mybuttonsquare" style="cursor:pointer"><md-icon class="materialicons">file_download</md-icon></button>';
-                    let downloadHelp = headerHelp
-                        .append("g")
-                        .append('foreignObject')
-                        .call(this.commons.d3helper.genericTooltip("Download SVG"))
-                        .style("display", "inline-block")
-                        .append('xhtml:body')
-                        .html(downloadhtml);
-
-                    let helphtml = '<button id="helpButton" class="mybutton mybuttoncircle"><md-icon class="materialicons">help_outline</md-icon></button>';
-                    let buttonHelp = headerHelp
-                        .append("g")
-                        .append('foreignObject')
-                        .call(this.commons.d3helper.genericTooltip("Show help"))
-                        .style("display", "inline-block")
-                        .style("padding-left", "4px")
-                        .append('xhtml:body')
-                        .html(helphtml);
-
-                    downloadHelp
-                        .on("click", () => {
-                            this.downloadSVG()
-                        });
-
-                    buttonHelp
-                        .on("click", () => {
-                            this.showHelp()
-                        });
+                headerHelp
+                    .append("button")
+                    .attr("id", "helpButton")
+                    .attr("class", "mybuttoncircle")
+                    .on("click", () => {
+                        this.showHelp()
+                    })
+                    // draw icon
+                    .append("svg")
+                    .attr("class", "helperButton")
+                    .append("path")
+                    .attr("d", "M2.93 17.070c-1.884-1.821-3.053-4.37-3.053-7.193 0-5.523 4.477-10 10-10 2.823 0 5.372 1.169 7.19 3.050l0.003 0.003c1.737 1.796 2.807 4.247 2.807 6.947 0 5.523-4.477 10-10 10-2.7 0-5.151-1.070-6.95-2.81l0.003 0.003zM9 11v4h2v-6h-2v2zM9 5v2h2v-2h-2z")
 
                 }
-            }
+
         }
 
         this.commons.svg = d3.select(div).append("svg")
@@ -929,15 +1009,25 @@ class FeatureViewer {
             .attr("height", this.commons.viewerOptions.height + this.commons.viewerOptions.margin.top + this.commons.viewerOptions.margin.bottom)
             .style("z-index", "2")
             .attr("id", "svgContent")
-            .on("contextmenu", (d, i) => {
-                //currentEvent.preventDefault();
+            .on("dblclick", (d,i)=>{
+                // react to double click
                 this.resetAll();
-                // react on right-clicking
                 if (CustomEvent) {
                     let event = new CustomEvent(this.commons.events.CLEAR_SELECTION_EVENT, {detail: {}});
                     this.commons.svgElement.dispatchEvent(event);
                 } else {
-                    console.warn("CustomEvent is not defined....");
+                    this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
+                }
+                if (this.commons.trigger) this.commons.trigger(this.commons.events.CLEAR_SELECTION_EVENT);
+            })
+            .on("contextmenu", (d, i) => {
+                // react on right click
+                this.resetAll();
+                if (CustomEvent) {
+                    let event = new CustomEvent(this.commons.events.CLEAR_SELECTION_EVENT, {detail: {}});
+                    this.commons.svgElement.dispatchEvent(event);
+                } else {
+                    this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
                 }
                 if (this.commons.trigger) this.commons.trigger(this.commons.events.CLEAR_SELECTION_EVENT);
             });
@@ -961,44 +1051,14 @@ class FeatureViewer {
             .attr("transform", "translate(" + (this.commons.viewerOptions.width + this.commons.viewerOptions.margin.left) + "," + this.commons.viewerOptions.margin.top + ")")
             .attr("id", "tags_container");
 
-        if (this.commons.viewerOptions.buttonTrack) {
-            // only if buttontrack
+        if (this.commons.viewerOptions.sideBar) {
+            // add white rect to hide feature zoom exceeding the viewer length
             this.commons.tagsContainer.append("rect")
+                .attr("x", -6)
                 .attr("width", "100%")
                 .attr("height", "100%")
                 .attr("fill", "white");
         }
-
-        //Create Clip-Path
-        // TODO: work on this for shadow
-        /*let defs = this.commons.svgContainer.append("defs");
-
-        defs.append("clipPath")
-            .attr("id", "clip")
-            .append("rect")
-            .attr("width", this.commons.viewerOptions.width)
-            .attr("height", this.commons.viewerOptions.height);
-
-        let filter = defs.append("filter")
-            .attr("id", "dropShadow")
-            .attr("height", "200%");
-
-        filter.append("feGaussianBlur")
-            .attr("in", "SourceAlpha")
-            .attr("stdDeviation", 3)
-            .attr("result", "blur");
-        filter.append("feOffset")
-            .attr("in", "blur")
-            .attr("dx", -2)
-            .attr("dy", 2)
-            .attr("result", "offsetBlur");
-
-        let feMerge = filter.append("feMerge");
-
-        feMerge.append("feMergeNode")
-            .attr("in", "offsetBlur");
-        feMerge.append("feMergeNode")
-            .attr("in", "SourceGraphic");*/
 
         this.commons.svgContainer.on('mousemove', () => {
             // let absoluteMousePos = this.commons.viewerOptions.brushActive ? d3.mouse(d3.select(".brush").node()) : d3.mouse(this.commons.svgContainer.node()); // TODO
@@ -1017,7 +1077,6 @@ class FeatureViewer {
         });
 
         if (this.commons.viewerOptions.showSequence) {
-            this.commons.viewerOptions.showSequence = true;
             if (this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
@@ -1033,7 +1092,7 @@ class FeatureViewer {
                 id: "sequence"
             });
             this.commons.yData.push({
-                title: "Sequence",
+                label: "Sequence",
                 y: this.commons.YPosition - 8,
                 flagLevel: 1
             });
@@ -1046,21 +1105,21 @@ class FeatureViewer {
             // this.commons.viewerOptions.brushActive = true;
             this.addBrush();
         }
+        /* feature removed
         if (this.commons.viewerOptions.verticalLine) {
             // this.commons.viewerOptions.verticalLine = true;
             this.addVerticalLine();
         }
+        */
 
         this.updateSVGHeight(this.commons.YPosition);
 
         // listen to resizing
-        window.addEventListener("resize", this.resizeListener);
+        window.addEventListener("resize", () => {
+            this.updateWindow()
+        }); // window.addEventListener works, but iupdateWindow needs to access to internal commons
 
     }
-
-    private resizeListener = () => {
-        this.updateWindow()
-    };
 
     private getTransformation(transform) {
         // Create a dummy g for calculation purposes only. This will never
@@ -1098,54 +1157,38 @@ class FeatureViewer {
     private addFeatureCore(object, flagLevel = 1, position = null) {
 
         this.commons.YPosition += this.commons.step;
-
-        // deselect it
-        if (!object.subFeaturesOn) {
-            object.subFeaturesOn = false;
+        // if no label is given, id on flag
+        if (!object.label) {object.label = object.id}
+        // deselect it if no isOpen input
+        if (!object.isOpen) {
+            object.isOpen = false;
         }
-        if (this.commons.animation && this.commons.features.length > 80) {
-            this.commons.animation = false;
+        if (this.commons.animation) {
             if (CustomEvent) {
                 let event = new CustomEvent(this.commons.events.ANIMATIONS_FALSE_EVENT, {detail: {}});
                 this.commons.svgElement.dispatchEvent(event);
             } else {
-                console.warn("CustomEvent is not defined....");
+                this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
             }
             if (this.commons.trigger) this.commons.trigger(this.commons.events.ANIMATIONS_FALSE_EVENT);
         };
-        
 
         if (!object.className) {
             object.className = object.type + "fv";
         }
+        else {
+            // initialized by user or by viewer?
+            if (object.className !== object.type + "fv") {
+                object.className = object.className + " " + object.type + "fv";
+            }
+        }
+
         if (!object.color) {
             object.color = "lightgrey";
         }
 
-        // check number of links and update tagsTrackWidth accordingly
-        // not disabled, fixed size
-        /*if (object.links) {
-            this.commons.viewerOptions.showLinkTag = true;
-            if (object.links.length > this.commons.maxNumberOfButtons) {
-                this.commons.maxNumberOfButtons = object.links.length;
-                this.resizeForButtons()
-            }
-        }*/
-
         //object.height = this.commons.elementHeight;
         object.flagLevel = flagLevel;
-
-        if (!object.id) {
-            object.id = 'f' + Math.random().toString(36).substring(7);
-        }
-        if (position) {
-            this.commons.features.splice(position, 0, object);
-        } else {
-            this.commons.features.push(object);
-        }
-
-        // chack feature order
-        //var order = this.commons.features.map(function(a) {return a['name'];});
 
         this.fillSVG.typeIdentifier(object);
         // flags
@@ -1153,112 +1196,8 @@ class FeatureViewer {
         if (object.type === "curve" || object.type === "path") {
             this.updateWindow();
         }
-        // updating subfeatures updateXaxis should not be done here
-        // it is done by feature_transition_dat
 
     }
-
-    private draw_subfeatures(parentRowY, subfeatures, parent, parentPos) {
-        // add subfeatures
-        this.commons.YPosition = parentRowY;
-        subfeatures.forEach(subf => {
-            this.addFeatureCore(subf, parent['flagLevel'] + 1, parentPos)
-        });
-        // this.commons.YPosition += this.commons.step;
-        let height = this.commons.YPosition - parentRowY;
-        return height
-        // this.commons.YPosition += 5;
-    }
-
-    private remove_subfeatures_data(parentRowY, parentPos, parent) {
-
-        // reload all features
-        // retrieve feature details
-        // identify all children
-        let checkButtons = false;
-        let checkCurve = false;
-        let totalHeigth = 0,
-            tranformedY;
-        for (let i = parentPos + 1; i < this.commons.features.length; i++) {
-
-            let childfeat = this.commons.features[i];
-            if (!checkCurve && (childfeat['type'] === "curve" || childfeat['type'] === "path")) {
-                checkCurve = true;
-                totalHeigth += childfeat['height']
-            };
-            if (childfeat['links'] && childfeat['links'].length >= this.commons.maxNumberOfButtons) {
-                checkButtons = true
-            };
-
-            if (childfeat['flagLevel'] > parent['flagLevel']) {
-
-                let id = childfeat['id'];
-
-                // remove from feature array and from html
-                d3.select(`#t${id}_tagarea`).remove();
-                d3.select(`#c${id}_container`).remove();
-                d3.select(`#${id}`).remove();
-
-                this.commons.features.splice(i, 1);
-                this.commons.yData.splice(i, 1);
-                i--; // decrement index to handle array size changes
-            } else {
-                break
-            }
-        }
-
-        let height = this.commons.YPosition - parentRowY;
-        return height
-
-    }
-
-    private feature_transition_data(featuresToMove, start) {
-
-        featuresToMove.forEach(f => {
-            let feature_id = f['id'];
-            // once for each feature
-
-            // area with buttons
-            let parentElementTagArea = d3.select(`#t${feature_id}_tagarea`);
-            let currentTagY = this.getTransformation(parentElementTagArea.attr("transform")).translateY;
-            this.subfeaturesTransition.area(parentElementTagArea, currentTagY + start);
-
-            // features container
-            let parentElementRow = d3.select(`#c${feature_id}_container`);
-            let currentRowY = this.getTransformation(parentElementRow.attr("transform")).translateY;
-            this.subfeaturesTransition.area(parentElementRow, currentRowY + start);
-
-            // feature flag
-            // flag should always be at features container height
-            let parentElementFlag = d3.select(`#${feature_id}`);
-            let currentParentY = 0;
-            if (parentElementFlag.attr("transform")) {
-                currentParentY = this.getTransformation(parentElementFlag.attr("transform")).translateY;
-            }
-            this.subfeaturesTransition.area(parentElementFlag, currentParentY + start);
-        });
-
-        // now, transitions to be applied once
-
-        // transit axis too
-        let axis = d3.select(`#${this.divId} .XAxis`);
-        let currentAxisY = this.getTransformation(axis.attr("transform")).translateY;
-        // transition of xaxis is slightly less
-        this.subfeaturesTransition.Xaxis(axis, currentAxisY + start);
-
-        // transit svgContent
-        let container = d3.select(`#${this.divId} #svgContent`);
-        let currentContainerH = (<HTMLElement>container.node()).getBoundingClientRect().height;
-        this.subfeaturesTransition.containerH(container, currentContainerH + start);
-
-        // final updates based on svg heigth
-        if (this.commons.viewerOptions.brushActive) {
-            this.commons.svgContainer.selectAll(".brush rect")
-                .attr('height', currentContainerH);
-        }
-        if (this.commons.viewerOptions.verticalLine) d3.selectAll(".VLine").style("height", (currentContainerH) + "px");
-
-    };
 
     private showHelp() {
 
@@ -1273,60 +1212,167 @@ class FeatureViewer {
 
     private downloadSVG() {
 
-        function clone(svg_el) {
-            let clone = svg_el.node().appendChild(this.cloneNode(true));
-            return d3.select(clone).attr("class", "clone");
-        }
-
-        let width = 500,
-            height = 500,
-            filename = "download_fv.png";
+        let filename = this.divId + "_feature_viewer.png";
 
         // serialize our SVG XML to a string.
-        // let svg_el = d3.select(`#${this.divId}`).select("#svgContent");
-        let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
-        // temporarily remove foreingobject area
-        let tagarea = svg_el.select("#tags_container").remove();
-        let foreingobjects = svg_el.select("#chevron").remove();
+        let svg_el = d3.select(`#${this.divId}`).select("#svgContent");
+        //let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
         // workaround: exclude tags container while serializing object, then append it again
-        let source = (new XMLSerializer()).serializeToString(svg_el.node());
+        // temporarily remove foreingobject area
+        // let tagarea = svg_el.select("#tags_container").remove();
+        let source = (new XMLSerializer()).serializeToString(<HTMLElement>svg_el.node());
         // restore removed parts
-        svg_el.node().append(tagarea.node());
-        svg_el.node().append(foreingobjects.node());
+        // svg_el.node().append(tagarea.node());
 
 
         let svgBlob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
         let svgUrl = URL.createObjectURL(svgBlob);
         let downloadLink = document.createElement("a");
         downloadLink.href = svgUrl;
-        downloadLink.download = "download.svg";
+        downloadLink.download = filename;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
+    }
+
+    private recursiveClose (array) {
+        for (const sbt of array) {
+            sbt.isOpen = false
+            if (sbt.subfeatures) {
+                this.recursiveClose(sbt.subfeatures)
+            }
+        }
+    }
+
+    private changeFeature(feature, bool) {
+
+        // freeze viewer
+        this.flagLoading(feature.id);
+        // close or open it
+        feature.isOpen = bool;
+        // if close, reset children status
+        if (!feature.isOpen) {
+            if (feature.subfeatures) {
+                this.recursiveClose(feature.subfeatures)
+            }
+        }
+
+        // overlay if opening many subfeatures
+        if (feature.isOpen) {
+            if (feature.subfeatures.length > 200) {
+                setTimeout(()=>{
+                    // empty features
+                    this.commons.features = this.emptyFeatures()
+                    // redraw features
+                    this.drawFeatures()
+                    // defreeze viewer
+                    this.stopFlagLoading(feature.id)
+                }, 1)
+                return
+            }
+        }
+
+        // empty features
+        this.commons.features = this.emptyFeatures()
+        // redraw features
+        this.drawFeatures()
+        // defreeze viewer
+        this.stopFlagLoading(feature.id)
+
+
+    }
+
+    private drawFeatures() {
+
+        // turn off features if more than 100
+        if (this.commons.features.length > 100) {
+            this.commons.animation = false;
+            this.commons.logger.warn("Animation is turned off with more than 100 features", {method:"addFeatureCore", fvId:this.divId, featuresNumber:this.commons.features.length})
+        }
+        for (const ft of this.commons.features) {
+            this.addFeature(ft)
+        };
+
+        this.updateXAxis(this.commons.YPosition);
+        this.updateSVGHeight(this.commons.YPosition);
+
+        // update brush
+        if (this.commons.viewerOptions.brushActive) {
+            this.resizeBrush()
+        }
+
+    }
+
+    private recursivelyRemove(ft) {
+        // remove subfeatures
+        if (ft.subfeatures) {
+            for (const sft of ft.subfeatures) {
+                this.recursivelyRemove(sft)
+            }
+        }
+        // remove from feature array and from html
+        d3.select(`#t${ft.id}_tagarea`).remove();
+        d3.select(`#c${ft.id}_container`).remove();
+        d3.select(`#${ft.id}`).remove();
+    }
+
+
+    /*** PUBLIC FUNCTIONS ***/
+
+    public emptyFeatures() {
+
+        let deepCopy = JSON.parse(JSON.stringify(this.commons.features))
+
+        for (const ft of this.commons.features) {
+            this.recursivelyRemove(ft)
+        };
+
+        // re-init features and yData
+        this.commons.features = [];
+        this.commons.yData = [];
+
+        // fix axis
+        this.updateXAxis(this.commons.step)
+
+        // transit svgContent
+        let container = d3.select(`#${this.divId} #svgContent`);
+        let newContainerH = this.commons.step * 3;
+        this.subfeaturesTransition.containerH(container, newContainerH); // header, sequence, axis
+
+        // final updates based on svg heigth
+        if (this.commons.viewerOptions.brushActive) {
+            this.commons.svgContainer.selectAll(".brush rect")
+                .attr('height', newContainerH);
+        }
+        // re-init YPosition
+        this.commons.YPosition = this.commons.step;
+
+        return deepCopy
+
     }
 
 
     /**
      * @function
      * @methodOf FeatureViewer
-     * @name onFeatureSelected
+     * @name onRegionSelected
      * @return {object} Object describing the selected feature */
-    public onFeatureSelected(listener) {
+    public onRegionSelected(listener) {
         this.commons.svgElement.addEventListener(this.commons.events.FEATURE_SELECTED_EVENT, listener);
     };
 
     public removeResizeListener() {
-        window.removeEventListener("resize", this.resizeListener);
+        window.removeEventListener("resize", this.updateWindow);
     };
 
     // edit: listener of selected flag
     /**
      * @function
      * @methodOf FeatureViewer
-     * @name onFlagSelected
+     * @name onFeatureSelected
      * @description Expected usage: once flag is selected, addSubFeature()
      * @return {object} Object describing the selected flag */
-    public onFlagSelected(listener) {
+    public onFeatureSelected(listener) {
         this.commons.svgElement.addEventListener(this.commons.events.FLAG_SELECTED_EVENT, listener);
     };
 
@@ -1368,22 +1414,14 @@ class FeatureViewer {
         this.commons.svgElement.addEventListener(this.commons.events.ANIMATIONS_FALSE_EVENT, listener);
     };
 
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name stopFlagLoading
-     * @description interrupts loading of a selected flag
-     * @param {string} id - The flag title, <output of onFlagSelected>.detail.id
-     */
     public stopFlagLoading = function (id) {
-        /*document.getElementById(id).setAttribute("class", "flag");
-        // change text icon
-        d3.select(`#${id}`).selectAll('text')
-            .text(function (d) {
-                let mygliph = '\ue080'; // right
-                return mygliph + '\u0020' + d.title;
-            });*/
-        console.warn("Loading of flag", id, "was interrupted");
+        this.commons.logger.debug("Finished loading subfeatures", {method:'addFeatures',fvId:this.divId})
+        d3.select(`#${this.divId}`).select("#fvoverlay").attr("class", null)
+    };
+
+    public flagLoading(id) {
+        this.commons.logger.debug("Loading subfeatures", {method:'addFeatures',fvId:this.divId})
+        d3.select(`#${this.divId}`).select("#fvoverlay").attr("class", "pageoverlay")
     };
 
     // function to call resize from external
@@ -1436,211 +1474,75 @@ class FeatureViewer {
      * @property {string} [feature.links.<Object>.message] - The message for tooltip
      * @property {string} [feature.links.<Object>.color] - Optional color for the visualized glyphicon
      */
-    public addFeature(object: FeatureObject) {
+    private addFeature(object: FeatureObject, flagLevel=1) {
 
-        // check if parent or children feature
-        if (object.parentId) {
+        this.addFeatureCore(object, flagLevel);
 
-            // this is a subfeature
-
-        } else {
-
-            this.addFeatureCore(object);
-            // TODO temporary solution
-
-
-            this.updateXAxis(this.commons.YPosition);
-            this.updateSVGHeight(this.commons.YPosition);
-
-            if (this.commons.viewerOptions.brushActive) {
-                this.commons.svgContainer.selectAll(".brush rect")
-                    .attr('height', this.commons.YPosition + 50);
+        if (object.subfeatures && object.isOpen) {
+            flagLevel+=1
+            for (const sft of object.subfeatures) {
+                this.addFeature(sft, flagLevel)
             }
-            if (this.commons.viewerOptions.verticalLine) d3.selectAll(".VLine").style("height", (this.commons.YPosition + 50) + "px");
-            if (d3.selectAll(".element") && d3.selectAll(".element")['_groups'].length > 1500) this.commons.animation = false;
-
-        }
+        };
 
         return object.id
 
     }
 
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name addSubFeature
-     * @param {object} target - The input subfeature
-     * @property {id} target.parentId - The id of parent feature, <output of onFlagSelected>.detail.id
-     * @property {Array.<Object>} target.subfeatures
-     * @property {Array.<Object>} target.subfeatures.<SubfeatureObject>.data
-     * @property {int} target.subfeatures.<SubfeatureObject>.data.<Object>.x - first position
-     * @property {int} target.subfeatures.<SubfeatureObject>.data.<Object>.y - last position (or a value for features of type "line")
-     * @property {string} [target.subfeatures.<SubfeatureObject>.data.<Object>.id] - id
-     * @property {int} target.subfeatures.<SubfeatureObject>.data.<Object>.y - message for the region tooltip
-     * @property {string} [target.subfeatures.<SubfeatureObject>.data.<Object>.description] - description
-     * @property {string} target.subfeatures.<SubfeatureObject>.data.<Object>.color - color ! Please note, at the moment color is needed in the subfeature object, WIP
-     * @property {string} target.subfeatures.<SubfeatureObject>.type -  ("rect","curve","unique","circle") : The type of feature, for a specific rendering
-     * @property {int} target.subfeatures.<SubfeatureObject>.yMax -  if type is curve, defines max value
-     * @property {string} [target.subfeatures.<SubfeatureObject>.name] - The name of theses features, which will be display as a label on the Y-axis
-     * @property {string} [target.subfeatures.<SubfeatureObject>.className] - a class name, for further personal computing
-     * @property {int} [target.subfeatures.<SubfeatureObject>.height] - height of the feature
-     * @property {string} target.subfeatures.<SubfeatureObject>.color - The color of the features
-     * @property {boolean} [target.subfeatures.<SubfeatureObject>.hasSubfeatures] - determines if object is clickable and expands for subfeature visualization
-     * @property {boolean} [target.subfeatures.<SubfeatureObject>.filter] - a class filter, for further personal computing
-     * @property {number} [target.subfeatures.<SubfeatureObject>.disorderContent] - content of disorder content tag (right side of viewer)
-     * @property {number} [target.subfeatures.<SubfeatureObject>.tooltip] - message for the flag tooltip
-     * @property {Array.<Objects>} [target.subfeatures.<SubfeatureObject>.link]
-     * @property {string} [target.subfeatures.<SubfeatureObject>.link.name] - The button name, used to identify click event
-     * @property {string} [target.subfeatures.<SubfeatureObject>.link.icon]  - Glyphicon code or text, specify glyphicon in unicode format, ex. \ue030
-     * @property {string} [target.subfeatures.<SubfeatureObject>.link.message] - The message for tooltip
-     * @property {string} [target.subfeatures.<SubfeatureObject>.link.color] - Optional color for the visualized glyphicon
-     */
-    private addSubFeature(object) {
-
-        // stop flag loading
-        d3.select(`#${this.divId}`).select(`#${object.parentId}`)
-            .attr("class", "");
-
-        // check input
-        if (object.parentId && object.subFeatures) {
-
-            // check first if open or close flag
-            // object contains id and subfeatures
-            let parent_id = object.parentId;
-            let subfeatures = object.subFeatures;
-
-            // get position of parent feature and move whatever is under
-            // retrieve parent feature
-            let elementPos = this.commons.features.map(function (x) {
-                return x["id"];
-            }).indexOf(parent_id);
-            let thisFeature = this.commons.features[elementPos];
-
-            // thisFeature is parent feature
-            let parentElementRow = d3.select(`#c${parent_id}_container`);
-            // get heigth of parent row and add its level
-            let parentRowY;
-            parentRowY = this.getTransformation(parentElementRow.attr("transform")).translateY;
-            if (thisFeature['type'] === 'curve' || thisFeature['type'] === 'path') {
-                parentRowY += thisFeature["height"] * 10 - 4;
-                parentRowY += this.commons.step / 2;
-            } else {
-                let parentRowN = this.calculate.addNLines(thisFeature['data']);
-                parentRowY += this.calculate.getHeightRect(parentRowN);
-            }
-
-            // calculate necessary movement
-            // get level for each features to write
-            let diff = 0;
-            let featuresToMove = this.commons.features.slice(elementPos + 1);
-
-            if (thisFeature['subFeaturesOn']) { // flag is already selected
-
-                // change text icon
-                d3.select(`#${parent_id}`).select('#chevron')
-                    .attr("x", 4)
-                    .attr("y", function (d) {
-                        // vertical flag placement
-                        return d['y'] - 4;
-                        // return d[1] - 4; // TODO
-                    })
-                    .html(this.commons.right_chevron);
-                // deselect feature
-                thisFeature['subFeaturesOn'] = false;
-
-                if (parent_id in this.commons.calculatedTransitions) {
-                    // remove subfeatures
-                    this.remove_subfeatures_data(parentRowY, elementPos, thisFeature);
-                    diff = this.commons.calculatedTransitions[parent_id];
-                    // apply transitions to featuresToMove elements
-                    // new features!
-                    featuresToMove = this.commons.features.slice(elementPos + 1);
-                } else {
-                    let changedHeight = this.remove_subfeatures_data(parentRowY, elementPos, thisFeature);
-                    diff = changedHeight;
-                    // avoid recalculation of distances: use calculatedTransitions object
-                    this.commons.calculatedTransitions[parent_id] = changedHeight;
-                    // apply transitions to featuresToMove elements
-                    // new features!
-                    featuresToMove = this.commons.features.slice(elementPos + 1);
-                };
-
-                // check start for flag
-                // closing
-                diff = diff * -1;
-
-            } else { // flag is not selected
-
-                // change text icon
-                d3.select(`#${parent_id}`).select('#chevron')
-                    .attr("x", 4)
-                    .attr("y", function (d) {
-                        // vertical flag placement
-                        return d['y'] - 4; // TODO
-                        // return d[1] - 4;
-                    })
-                    .html(this.commons.down_chevron);
-                // select feature
-                thisFeature['subFeaturesOn'] = true;
-
-                if (parent_id in this.commons.calculatedTransitions) {
-                    this.draw_subfeatures(parentRowY, subfeatures, thisFeature, elementPos + 1);
-                    diff = this.commons.calculatedTransitions[parent_id];
-                } else {
-                    let changedHeight = this.draw_subfeatures(parentRowY, subfeatures, thisFeature, elementPos + 1);
-                    diff  = changedHeight;
-                    // avoid recalculation of distances: use calculatedTransitions object
-                    this.commons.calculatedTransitions[parent_id] = changedHeight;
-                };
-
-            }
-
-            this.feature_transition_data(
-                featuresToMove,
-                diff
-            );
-            this.resizeBrush()
-
-        } else {
-            console.warn("Wrong addSubFeature input")
-        }
-
-    }
-
-    public addFeatures(flist: FeaturesList) {
+    public addFeatures(featureList: FeaturesList) {
 
         // check ids are unique
-        const uniqueIds = [...new Set(flist.map(item => item.id))];
-        if (uniqueIds.length !== flist.length) {
+        const uniqueIds = [...new Set(featureList.map(item => item.id))];
+        if (uniqueIds.length !== featureList.length) {
 
             this.commons.logger.error("Feature ids are not unique", {method:'addFeatures',fvId:this.divId})
 
         } else {
 
-            // add to viewer
-            let unflatted = this.unflatten(flist);
-            this.commons.features = unflatted.tree;
-            let ftsIds = unflatted.ids;
-
-            // check if features are missing from the tree
-            let unprocessedIds = uniqueIds.filter((x)=>{
-                return !(ftsIds.has(x))
+            // check ids are valid
+            let regexIds = new RegExp('^[a-zA-Z]')
+            let wrongIds = uniqueIds.filter((i)=>{
+                return !regexIds.test(i)
             });
-            if (unprocessedIds.length !== 0) {
-                this.commons.logger.error("Subfeatures with no known parentId", {method:'addFeatures',fvId:this.divId,features:unprocessedIds})
+            if (wrongIds.length !== 0) {
+                this.commons.logger.error("Some feature ids are not valid, html ids cannot start with digits", {method:'addFeatures',fvId:this.divId,wrongIds:wrongIds})
+            } else {
+
+                // add to viewer
+
+                // features already in viewer?
+                let unflatted = this.unflatten(
+                    featureList,
+                    null,
+                    null,
+                    this.commons.features.length !== 0 ? this.commons.features : null
+                );
+
+                // add new structured features to the old ones (if any, else sequence)
+                this.commons.features = this.commons.features.concat(unflatted.tree);
+                let ftsIds = unflatted.ids;
+
+                // check if features are missing from the tree
+                let unprocessedIds = uniqueIds.filter((x)=>{
+                    return !(ftsIds.has(x))
+                });
+                if (unprocessedIds.length !== 0) {
+                    this.commons.logger.error("Subfeatures with no known parentId", {method:'addFeatures',fvId:this.divId,features:unprocessedIds})
+                }
+
+                // features already in viewer? empty it before drawing
+                this.commons.features = this.emptyFeatures()
+
+                // draw the viewer
+                this.drawFeatures()
+
             }
-
-            // draw the viewer
-            this.commons.features.forEach((ft)=>{
-               this.addFeature(ft)
-            });
-
 
         }
 
     }
 
-    constructor(sequence: string | number, div: string, options: UserOptions) {
+    constructor(sequence: string, div: string, options?: UserOptions, features?: FeaturesList) {
 
         this.commons = new Commons();
 
@@ -1650,16 +1552,12 @@ class FeatureViewer {
         this.commons.YPosition = this.commons.step;
 
         // read divId
-        this.divId = div.slice(1).toString();
+        this.commons.divId = this.divId = div.slice(1).toString();
         this.commons.logger = new FeatureViewerLog(); // TODO this.divId as input
 
         // sequence and seq length
-        if (typeof sequence === 'string') {
-            this.sequence = sequence;
-        } else {
-            this.sequence = null;
-        }
-        this.commons.fvLength = typeof sequence === 'string' ? sequence.length : sequence;
+        this.sequence = sequence;
+        this.commons.fvLength = sequence.length;
 
         // parse user options
         this.parseUserOptions(options);
@@ -1672,7 +1570,12 @@ class FeatureViewer {
         this.tool = new Tool(this.commons);
 
         this.init(div);
-        this.resizeViewer()
+
+        // features?
+        if (features) {
+            this.addFeatures(features)
+        }
+        this.resizeViewer();
     }
 }
 

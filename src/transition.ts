@@ -32,15 +32,9 @@ export class Transition extends ComputingFunctions {
     public basalLine(object) {
 
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);
-        if (object.type === "unique" || object.type === "circle") {
-            container.selectAll(".line" + object.className)
-                .attr("d", this.commons.line.x((d) => {
-                    return this.commons.scaling(d['x']);
-                }))
-        } else {
-            container.selectAll(".line")
-                .attr("d", this.commons.line);
-        }
+        console.log(object.id, container.selectAll(".line"), this.commons.line)
+        container.selectAll(".line")
+            .attr("d", this.commons.line);
 
     }
 
@@ -50,35 +44,35 @@ export class Transition extends ComputingFunctions {
         // line does not require transition
 
         let transit1, transit2;
+        // group selection
+        transit1 = container.selectAll("." + object.className + "Group")
+        transit2 = container.selectAll("." + object.className)
+        // transition
         if (this.commons.animation) {
-            transit1 = container.selectAll("." + object.className + "Group")
+            transit1
                 .transition()
                 .duration(500);
-            transit2 = container.selectAll("." + object.className)
+            transit2
                 .transition()
                 .duration(500);
         }
-        else {
-            transit1 = container.selectAll("." + object.className + "Group");
-            transit2 = container.selectAll("." + object.className);
-        }
+        // transition
         transit1.attr("transform",  (d) => {
             return "translate(" + this.rectX(d) + ",0)"
         });
-
         transit2
             .attr("width", this.rectWidth2);
 
         // transition to text
         container.selectAll("." + object.className + "Text")
             .attr("transform",  (d) => {
-                if (d.description && this.commons.scaling(d['x'])<0) {
+                if (d.label && this.commons.scaling(d['x'])<0) {
                     return "translate(" + -this.rectX(d) + ",0)"
                 }
             })
             .style("visibility",  (d) => {
-                if (d.description && this.commons.scaling(d['x'])>0) {
-                    return (this.commons.scaling(d.y) - this.commons.scaling(d['x'])) > d.description.length * 8 && object.height > 11 ? "visible" : "hidden";
+                if (d.label && this.commons.scaling(d['x'])>0) {
+                    return (this.commons.scaling(d.y) - this.commons.scaling(d['x'])) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
                 } else return "hidden";
             });
     }
@@ -153,9 +147,9 @@ export class Transition extends ComputingFunctions {
             .attr("d", this.commons.lineBond.x((d) => {
                     return this.commons.scaling(d['x']);
                 })
-                    .y( (d) => {
-                        return -d.y * 10 + object.height;
-                    })
+                .y( (d) => {
+                    return -d['y'] * 10 + object.height;
+                })
             );
         let transit;
         if (this.commons.animation) {
@@ -168,7 +162,7 @@ export class Transition extends ComputingFunctions {
         }
         transit
             .attr("d", this.commons.lineBond.y((d) => {
-                return -d.y * 10 + object.height;
+                return -1 * d['y'] * 10 + object.height;
             }));
     }
 
@@ -196,12 +190,6 @@ export class Transition extends ComputingFunctions {
 
         transit
             .attr("d", this.commons.lineGen.y((d) => {
-                    // deprecated with new d3 import
-                    /*if (object.interpolation){
-                        this.commons.lineGen.curve(d3[object.interpolation]())
-                    } else {
-                        this.commons.lineGen.curve(d3.curveBasis)
-                    }*/
                     return this.commons.lineYScale(-d.y) * 10 + object.shift;
                 })
             );

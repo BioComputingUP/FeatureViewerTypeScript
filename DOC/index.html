@@ -8,8 +8,7 @@
 <body>
 
 <!-- First include jquery js -->
-<script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js"></script>
 
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -20,22 +19,10 @@
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-<!--<link rel="stylesheet"  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>-->
-<!--<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">-->
-
-<!--<p>Chevron (top) <span class="chevron top"></span>
-<p>Chevron (right) <span class="chevron right"></span>
-<p>Chevron (bottom) <span class="chevron bottom"></span>
-<p>Chevron (left) <span class="chevron left"></span>-->
-
 <div class="jumbotron">
     <h1>Feature Viewer</h1>
     <p>This javascript tool will allow you to display your sequence features</p>
 </div>
-
 
 <div class="row" style="margin-top: 30px;border-bottom:1px solid #E7EAEC;">
     <div class="row panel-heading">
@@ -48,7 +35,8 @@
             <li><strong>showAxis</strong> <em>(boolean)</em> : Display or not the axis text </li>
             <li><strong>showSequence</strong> <em>(boolean)</em> : Display or not the sequence </li>
             <li><strong>brushActive</strong> <em>(boolean)</em> : Allows the zoom </li>
-            <li><strong>bubbleHelp</strong> <em>(boolean)</em> : Add a toolbar allowing users to download SVG and show help </li>
+            <li><strong>toolbar</strong> <em>(boolean)</em> : Add a toolbar allowing users to download SVG and show help </li>
+            <li><strong>toolbarPosition</strong> <em>(string)</em> : Position of toolbar in justify-content property, ex. <span style="font-family:monospace;background-color:#eee;">toolbarPosition: space-between</span></li>
             <li><strong>zoomMax</strong> <em>(integer)</em> : Choose the max zoom allowed (number of residues)  - Default: 10, cannot be less than 10 </li>
             <li><strong>showSubFeatures</strong> <em>(integer)</em> : Allows subfeatures visualization - Default: false </li>
             <li><strong>flagColor</strong> <em>(string)</em> : Color of flags (titles on the left), hex string ex. <span style="font-family:monospace;background-color:#eee;">flagColor: '#DFD5F5'</span> </li>
@@ -62,34 +50,6 @@
         </ul>
     </div>
 </div>
-<div class="row" style="border-bottom:1px solid #E7EAEC;">
-    <div style="margin: 30px">
-        <div id="fv1"></div>
-    </div>
-</div>
-
-<script>
-
-    const P04050 = "MTKFTILLISLLFCIAHTCSASKWQHQQDSCRKQLQGVNLTPCEKHIMEKIQGRGDDDDD" +
-        "DDDDNHILRTMRGRINYIRRNEGKDEDEEEEGHMQKCCTEMSELRSPKCQCKALQKIMEN" +
-        "QSEELEEKQKKKMEKELINLATMCRFGPMIQCDLSSDD"
-
-    const fv1 = new FeatureViewer(P04050, "#fv1", {
-        showAxis: false,
-        showSequence: true,
-        brushActive: true,
-        bubbleHelp: true,
-        zoomMax: 20,
-        showSubFeatures: true,
-        flagColor: "#DFD5F5",
-        flagTrack: '200px',
-        showLinkTag: false,
-        showDisorderContentTag: false,
-        buttonTrack: 400,
-        animation: true,
-        offset: {start:40, end:100}
-    });
-</script>
 
 
 <div class="row" style="margin-top: 30px;border-bottom:1px solid #E7EAEC;">

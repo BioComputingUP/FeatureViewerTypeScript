@@ -1,19 +1,20 @@
+
 export interface UserOptions {
     offset?: {
         start: number,
         end: number
     },
+    breakpoint?: number,
     showAxis?: boolean,
     showSequence?: boolean,
     brushActive?: boolean,
-    bubbleHelp?: boolean,
+    toolbar?: boolean,
+    toolbarPosition?: string,
     zoomMax?: number,
     showSubFeatures?: boolean,
     flagColor?: string,
     flagTrack?: number | string | boolean,
-    showLinkTag?: boolean,
-    showDisorderContentTag?: boolean,
-    buttonTrack?: number | string | boolean,
+    sideBar?: number | string | boolean,
     animation?: boolean,
     unit?: string
 }
@@ -30,12 +31,10 @@ export interface ViewerOptions {
     tooltipColor: string,
     showHelper: boolean,
     flagColor: string,
-    showSubFeatures: boolean;
-    showDisorderContentTag: boolean;
-    showLinkTag: boolean;
-    buttonTrack: boolean;
-    labelTrackWidth: number;
-    tagsTrackWidth: number;
+    showSubFeatures: boolean,
+    sideBar: boolean,
+    labelTrackWidth: number,
+    tagsTrackWidth: number,
     margin: {
         top: number,
         bottom: number,
@@ -53,6 +52,7 @@ export interface ViewerOptions {
     unit: string,
     animation: boolean,
     toolbar: boolean,
+    toolbarPosition?: string,
     bubbleHelp: boolean,
     showAxis: boolean,
     positionWithoutLetter: number
@@ -61,8 +61,8 @@ export interface ViewerOptions {
 export interface FeaturesList extends Array<FeatureObject>{}
 
 export interface FeatureObject {
-    id: any,
-    type: string, // TODO "rect" | "path" | "curve" | "unique" | "circle" | "sequence",
+    id: string,
+    type: string // "rect" | "path" | "curve" | "unique" | "circle" | "sequence",
     data: Array<FeatureData> | string,
     parentId?: any,
     label?: string,
@@ -74,12 +74,15 @@ export interface FeatureObject {
     opacity?: number,
     tooltip?: string,
     sidebar?: Array<SideBarObject>,
-    isOpen?: boolean
+    isOpen?: boolean,
+    flagLevel?: number,
+    subfeatures?: Array<FeatureObject>
 }
 
 export interface FeatureData {
     x: number,
     y: any,
+    label?: string,
     className?: string,
     color?: string,
     stroke?: string,
@@ -88,10 +91,11 @@ export interface FeatureData {
 }
 
 export interface SideBarObject {
-    buttonId: string,
-    tooltip?: string,
-    htmlContent?: string,
-    type?: "button" | "link" | "percentage"
+    id: string,
+    tooltip?: string, // or html
+    content?: string,
+    type?: string,
+    label?: string | number
 }
 
 export interface FeatureViewerLogger {

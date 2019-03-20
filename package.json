@@ -1,11 +1,11 @@
 {
   "name": "feature-viewer-typescript",
-  "version": "1.0.5",
+  "version": "2.0.1",
   "description": "",
   "main": "index.js",
   "author": "",
   "scripts": {
-    "scss": "tcm -p src/assets/*.scss -c",
+    "scss": "tcm -p assets/*.scss -c",
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"

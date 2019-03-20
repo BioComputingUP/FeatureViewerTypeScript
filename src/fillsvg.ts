@@ -21,7 +21,7 @@ class PreComputing {
                 x: d.x,
                 y: 0,
                 id: d.id,
-                description: d.description || '',
+                description: d.label || '',
                 tooltip: d.tooltip || '',
                 color: d.color,
                 stroke: d.stroke,
@@ -71,8 +71,8 @@ class PreComputing {
                 return 1;
             }));
             // overwrite this value if given option ymax
-            if ('yMax' in object) {
-                maxValue = object['yMax'];
+            if ('yLim' in object) {
+                maxValue = object['yLim'];
             }
             level = maxValue > level ? maxValue : level;
 
@@ -85,7 +85,7 @@ class PreComputing {
                     x: d.x ,
                     y: yValue,
                     id: d.id,
-                    description: d.description || '',
+                    description: d.label || '',
                     tooltip: d.tooltip || ''
                 }
             })
@@ -184,14 +184,14 @@ class FillSVG extends ComputingFunctions {
         }
 
         this.commons.yData.push({
-            hasSubFeatures: object.hasSubFeatures,
+            hasSubFeatures: object.subfeatures ? true: false,
             tooltip: object.tooltip,
-            title: object.name,
+            label: object.label,
             id: object.id,
             y: thisYPosition,
-            filter: object.filter,
             flagColor: object.flagColor,
-            flagLevel: object.flagLevel
+            flagLevel: object.flagLevel,
+            isOpen: object.isOpen
         });
 
         if (object.type === "rect") {
@@ -260,141 +260,114 @@ class FillSVG extends ComputingFunctions {
 
     public tagArea(object) {
 
-        let thisYPosition;
-        if (object.type === "curve" || object.type === "path") {
-            if (!object.height) { object.height = 10 };
-            let shift = parseInt(object.height);
-            thisYPosition = this.commons.YPosition + shift * 10 - 4 ;
-        } else {
-            thisYPosition = this.commons.YPosition;
-        }
+        let thisYPosition = this.commons.YPosition;
 
         // var threeArray = [showDisorderContentTag, showViewerTag, showLinkTag];
 
         let id = 't' + object.id + "_tagarea";
-        this.commons.tagsContainer.append("g")
+        let featureArea = this.commons.tagsContainer.append("g")
             .attr("class", "tagGroup")
             .attr("id", id)
             .attr("transform", "translate(0," + thisYPosition + ")");
 
         // ad areas in any case
+        if (object.sidebar) {
 
-        // add disorder content and button areas
-        if (object.disorderContent && this.commons.viewerOptions.showDisorderContentTag && this.commons.viewerOptions.buttonTrack) {
-            this.commons.tagsContainer.select("#" + id)
-                .append('g')
-                .attr("id", id + '_disorder')
-                .attr("transform", "translate(0,0)")
-                .data([{
-                    name: object.name,
-                    data: object,
-                    type: "disorder"
-                }]);
-        }
-        
-        if (object.links && this.commons.viewerOptions.showLinkTag && this.commons.viewerOptions.buttonTrack) {
-            // one g for each button
-            for (let i = 0; i < object.links.length; i++) {
-                // add featureDetail in object.links
-                let detailObj = {
-                    name: object.name,
-                    data: object.data
-                };
-                object.links[i].featureDetails = detailObj;
+            let objectPos = 0;
+            // check type and add html elements accordingly
+            for (const bt of object.sidebar) {
+                if (bt.type) {
 
-                this.commons.tagsContainer.select("#" + id)
-                    .append('g')
-                    .attr("id", id + '_button_' + object.links[i].name)
-                    .data([{
-                        feature: object.name,
-                        name: object.links[i].name,
-                        icon: object.links[i].icon,
-                        color: object.links[i].color,
-                        message: object.links[i].message,
-                        //featureDetails: object
-                    }]);
-            }
-        }
+                    if (bt.type !== "button" && bt.type !== "percentage" && bt.type !== "link" && bt.type !== "icon") {
+                        this.commons.logger.error("Unknown type of button", {method:'addFeatures',fvId:this.commons.divId,featureId:object.id,buttonId:bt.buttonId})
+                    } else {
 
-        // disorder
-        let contentLength = 90;
-        if (!this.commons.viewerOptions.showDisorderContentTag) {
-            contentLength = 0;
-        }
+                        let gButton = featureArea
+                            .append('g')
+                            .attr("id", id + '_button_' + bt.id)
+                            .attr("transform", "translate(" + objectPos + ",0)")
+                            .data([{
+                                label: object.label,
+                                featureId: object.id,
+                                data: object,
+                                type: "button",
+                                id: bt.id,
+                                tooltip: bt.tooltip
+                            }]);
 
-        if (object.disorderContent && this.commons.viewerOptions.showDisorderContentTag && this.commons.viewerOptions.buttonTrack) {
+                        let content;
+                        if (bt.type == "button") {
+                            content = `<button class="mybutton" id="${bt.id}" style="color: rgba(39, 37, 37, 0.9);">${bt.label}</button>`
+                        }
+                        else if (bt.type == "percentage") {
+                            let disordersString = bt.label.toString() + '%';
+                            let color = this.gradientColor(bt.label);
+                            let textColor = (color === "rgba(39, 37, 37, 0.9)") ? "white": "rgba(39, 37, 37, 0.9)";
+                            content = `<button id="${bt.id}" class="mybutton" style="background-color: ${color}; color: ${textColor}">${disordersString}</button>`
+                        }
+                        else if (bt.type == "link") {
+                            let linkicon = "M9.26 13c-0.167-0.286-0.266-0.63-0.266-0.996 0-0.374 0.103-0.724 0.281-1.023l-0.005 0.009c1.549-0.13 2.757-1.419 2.757-2.99 0-1.657-1.343-3-3-3-0.009 0-0.019 0-0.028 0l0.001-0h-4c-1.657 0-3 1.343-3 3s1.343 3 3 3v0h0.080c-0.053 0.301-0.083 0.647-0.083 1s0.030 0.699 0.088 1.036l-0.005-0.036h-0.080c-2.761 0-5-2.239-5-5s2.239-5 5-5v0h4c0.039-0.001 0.084-0.002 0.13-0.002 2.762 0 5.002 2.239 5.002 5.002 0 2.717-2.166 4.927-4.865 5l-0.007 0zM10.74 7c0.167 0.286 0.266 0.63 0.266 0.996 0 0.374-0.103 0.724-0.281 1.023l0.005-0.009c-1.549 0.13-2.757 1.419-2.757 2.99 0 1.657 1.343 3 3 3 0.009 0 0.019-0 0.028-0l-0.001 0h4c1.657 0 3-1.343 3-3s-1.343-3-3-3v0h-0.080c0.053-0.301 0.083-0.647 0.083-1s-0.030-0.699-0.088-1.036l0.005 0.036h0.080c2.761 0 5 2.239 5 5s-2.239 5-5 5v0h-4c-0.039 0.001-0.084 0.002-0.13 0.002-2.762 0-5.002-2.239-5.002-5.002 0-2.717 2.166-4.927 4.865-5l0.007-0z"
+                            content = `<button class="mybutton" id="${bt.id}"><svg class="helperButton"><path d="${linkicon}"></path></svg></button>`
+                        }
+                        else if (bt.type == "icon") {
+                            content = `<button class="mybutton" id="${bt.id}"><svg class="helperButton"><path d="${bt.label}"></path></svg></button>`
+                        }
 
-            let disordersString = object.disorderContent.toString() + '%';
-            let color = this.gradientColor(object.disorderContent);
-            let textColor = (color === "black") ? "white": "black";
-            let disId = id + "_disorderContainer";
+                        gButton
+                            .append('foreignObject') // foreignObject can be styled with no limitation by user
+                            .attr("width", "100%")
+                            .attr("height", "100%")
+                            .attr("y",-6)
+                            .html(content)
+                            
+                        if (bt.type !== "percentage") {
+                            gButton.call(this.commons.d3helper.genericTooltip(bt));
+                        }
 
-            var disorderContentTag = '<g style="padding-left:3px; padding-right:3px" id="' + disId + 
-            '""><button class="mybutton mybutton--square" style="margin-left:4px; font-family: \'sans-serif\'; font-size: 13px; background-color:' +
-            color + '"">' + '<span style="color:' + textColor + '">' + disordersString + '</span></button></g>'
+                        // update object position
+                        objectPos += (<HTMLElement>d3.select('#'+bt.id).node()).getBoundingClientRect().width + 3;
 
-            this.commons.tagsContainer.selectAll("#" + id + "_disorder")
-                .append('foreignObject')
-                .attr("y", -6)
-                .attr("width", "100%")
-                .attr("height", "100%")
-                .append('xhtml:body')
-                .style("margin", "0")
-                .html(disorderContentTag)
-                .call(this.commons.d3helper.genericTooltip("Disorder content"));
-
-            // contentLength = d3.select(`#${disId}`).node().getBoundingClientRect().width + 10;
-            let myd3node = d3.select(`#${disId}`).node();
-            contentLength = (<HTMLElement>myd3node).getBoundingClientRect().width + 10;
-        }
-
-        // link buttons
-        if (object.links) {
-
-            let tagStart = contentLength;
-            let size;
-
-            for (let i = 0; i < object.links.length; i++) {
-
-                //this.commons.tagsContainer.select("#" + id + '_button_' + object.links[i].name).attr("transform", "translate(" + size + ",0)")
-
-                // translation of following length
-                let obj = object.links[i];
-                obj.type = 'button';
-                let myid;
-
-                this.commons.tagsContainer.selectAll("#" + id + "_button_" + obj.name)
-                    .append('foreignObject')
-                    .attr("id", () => {
-                        myid = id + "_button_" + obj.name + "_foreingObject"
-                        return myid
-                    })
-                    .attr("width", "100%")
-                    .attr("height", "100%")
-                    .attr("y",-9)
-                    .attr("transform", "translate(" + tagStart + ",0)")
-                    .append('xhtml:body')
-                    .style("margin", "0")
-                    .html(obj.html)
-                    .call(this.commons.d3helper.tooltip(obj));
-
-                // get size
-                if (d3.select(`#${myid}`).select('.fvlink').node()) {
-                    // container
-                    d3.select(`#${myid}`).select('.fvlink').style("padding-left", "6px");
-                    d3.select(`#${myid}`).select('.fvlink').style("padding-right", "6px");
-                    //size = d3.select(`#${myid}`).select('.mybutton').node().getBoundingClientRect().width;
-                } /*else {
-                    size = 30;
-                }*/
-                size = 40;
-                if (d3.select(`#${myid}`).select('button').node()) {
-                    d3.select(`#${myid}`).select('button').attr("class", "mybutton mybutton--circle")
+                    }
                 }
+                else if (bt.content) {
 
-                tagStart += size;
+                    let gHtml = featureArea
+                        .append('g')
+                        .attr("id", id + '_button_' + bt.id)
+                        .attr("transform", "translate(" + (objectPos + 3) + ",0)")
+                        .data([{
+                            label: object.label,
+                            featureId: object.id,
+                            data: object,
+                            type: "button",
+                            id: bt.id
+                        }]);
 
+                    gHtml
+                        .append('foreignObject')
+                        .attr("y", -6)
+                        .attr("width", "100%")
+                        .attr("height", "100%")
+                        .append('xhtml:body')
+                        .style("margin", "0")
+                        .attr("id", bt.id)
+                        .html(bt.content)
+                        .call(this.commons.d3helper.genericTooltip(bt));
+
+                    // objectPos += 50;
+                    // get width of the drawn object
+                    try {
+                        let contentwidth = (<HTMLElement>d3.select(`#${bt.id}`).select('*').node()).getBoundingClientRect().width
+                        objectPos += contentwidth + 5;
+                    } catch (e) {
+                        objectPos += 100;
+                    }
+
+                } else {
+                    this.commons.logger.error("Neither html content nor type of button is specified", {method:'addFeatures',fvId:this.commons.divId,featureId:object.id,buttonId:bt.buttonId})
+                }
             }
+
         }
     }
 
@@ -409,7 +382,7 @@ class FillSVG extends ComputingFunctions {
             .data(seq)
             .enter()
             .append("text")
-            .attr("clip-path", "url(#clip)")
+            //.attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "AA")
             .attr("text-anchor", "middle")
             .attr("x", (d, i) => {
@@ -438,7 +411,7 @@ class FillSVG extends ComputingFunctions {
                 //.scale(scaling)
                 .enter()
                 .append("path")
-                .attr("clip-path", "url(#clip)")
+                // .attr("clip-path", "url(#clip)") // firefox compatibility
                 .attr("d", this.commons.line)
                 .attr("class", "mySequence sequenceLine")
                 .style("z-index", "0")
@@ -456,7 +429,6 @@ class FillSVG extends ComputingFunctions {
 
     public rectangle(object, position) {
 
-
         //var rectShift = 20;
         if (!object.height) object.height = this.commons.elementHeight;
         let rectHeight = this.commons.elementHeight;
@@ -467,7 +439,7 @@ class FillSVG extends ComputingFunctions {
 
         let rectsPro = this.commons.svgContainer.append("g")
             .attr("class", "rectangle featureLine")
-            .attr("clip-path", "url(#clip)")
+            //.attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("transform", "translate(0," + position + ")")
             .attr("id", () => {
                 // random string
@@ -520,7 +492,6 @@ class FillSVG extends ComputingFunctions {
                 // add id to object
                 let id = "f_" + object.id + Math.random().toString(36).substring(7);
                 d.id = id;
-                d.tooltip = d.tooltip;
                 return id;
             })
             .attr("y", (d) => {
@@ -560,6 +531,7 @@ class FillSVG extends ComputingFunctions {
             .style("z-index", "13")
             .call(this.commons.d3helper.tooltip(object));
 
+
         rectsProGroup
             .append("text")
             .attr("class", "element " + object.className + "Text")
@@ -569,13 +541,13 @@ class FillSVG extends ComputingFunctions {
             .attr("dy", "0.35em")
             .style("font-size", "10px")
             .text((d) => {
-                return d.description
+                return d.label
             })
-            .style("fill", "black")
+            .style("fill", "rgba(39, 37, 37, 0.9)")
             .style("z-index", "15")
             .style("visibility",  (d) => {
-                if (d.description) {
-                    return (this.commons.scaling(d.y) - this.commons.scaling(d.x)) > d.description.length * 8 && object.height > 11 ? "visible" : "hidden";
+                if (d.label) {
+                    return (this.commons.scaling(d.y) - this.commons.scaling(d.x)) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
                 } else return "hidden";
             })
             .call(this.commons.d3helper.tooltip(object));
@@ -587,39 +559,49 @@ class FillSVG extends ComputingFunctions {
     }
 
     public unique(object, position) {
+
         let rectsPro = this.commons.svgContainer.append("g")
             .attr("class", "uniquePosition featureLine")
             .attr("transform", "translate(0," + position + ")")
             .attr("id", () => {
-                // random string
-                // return divId + '_' + d.title.split(" ").join("_") + '_g'
+                // random string'
                 return 'c' + object.id + '_container'
             });
 
         let dataLine = [];
-        dataLine.push([{
-            x: 1,
-            y: 0
-        }, {
-            x: this.commons.fvLength,
-            y: 0
-        }]);
+        // case with empty data
+        if (!this.commons.level) {
+            this.commons.level = 1
+        }
+        for (let i = 0; i < this.commons.level; i++) {
+            dataLine.push([{
+                x: 1,
+                y: 0,
+            }, {
+                x: this.commons.fvLength,
+                y: 0
+            }]);
+        }
 
         rectsPro.selectAll(".line " + object.className)
             .data(dataLine)
             .enter()
             .append("path")
             .attr("d", this.commons.line)
-            .attr("class", "line " + object.className)
+            .attr("class", () => {
+                return "line " + object.className
+            })
             .style("z-index", "0")
             .style("stroke", object.color)
             .style("stroke-width", "1px");
 
-        rectsPro.selectAll("." + object.className)
-            .data(object.data)
+        let readyData = [...object.data, ...object.data];
+
+        rectsPro.selectAll("." + object.className + 'Unique')
+            .data(readyData)
             .enter()
             .append("rect")
-            .attr("clip-path", "url(#clip)")
+            // .attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
                 return "f_" + object.id + Math.random().toString(36).substring(7);
@@ -660,6 +642,7 @@ class FillSVG extends ComputingFunctions {
             y: 0
         }]);
 
+        // basal line
         circlesPro.selectAll(".line " + object.className)
             .data(dataLine)
             .enter()
@@ -670,16 +653,16 @@ class FillSVG extends ComputingFunctions {
             .style("stroke", object.color)
             .style("stroke-width", "1px");
 
-        let readyData = [ ...[{}], ...object.data];
+        let readyData = [...object.data, ...object.data];
 
-        circlesPro.selectAll("." + object.className)
+        circlesPro.selectAll("." + object.className + 'Circle')
             .data(readyData)
             .enter()
             .append("circle")
             //.attr("clip-path", "url(#clip)")
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                return "f_" + object.id + Math.random().toString(36).substring(7);
+                return "f_" + object.id;
             })
             // circle dimensions
             .attr("cx", (d) => {
@@ -687,7 +670,14 @@ class FillSVG extends ComputingFunctions {
             })
             .attr("cy", "5") // same as height
             // circle radius
-            .attr("r", (d) => {return d.y*this.commons.elementHeight})
+            .attr("r", (d) => {
+                if (d.y<=1) {
+                    return d.y*this.commons.elementHeight
+                } else {
+                    this.commons.logger.warn("Maximum circle radius is 1", {method:'addFeatures',fvId:this.commons.divId,featureId:object.id})
+                    return this.commons.elementHeight
+                }
+            })
             .attr("width", (d) => {
                 if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) return 2;
                 else return this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
@@ -719,8 +709,13 @@ class FillSVG extends ComputingFunctions {
     }
 
     public path(object, position) {
+
+        if (!object.height) object.height = this.commons.elementHeight;
+        let pathHeight = this.commons.elementHeight;
+
         let pathsDB = this.commons.svgContainer.append("g")
             .attr("class", "pathing featureLine")
+            //.attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("transform", "translate(0," + position + ")")
             .attr("id", () => {
                 // random string
@@ -728,32 +723,31 @@ class FillSVG extends ComputingFunctions {
                 return 'c' + object.id + '_container'
             });
 
-        let dataLine = [{
+        let dataLine = [];
+        dataLine.push([{
             x: 1,
             y: 0
         }, {
             x: this.commons.fvLength,
             y: 0
-        }];
+        }]);
 
-        // basal line
-        /*pathsDB.selectAll(".line"+object.className)
+        /* deprecated basal line
+        pathsDB.selectAll(".line " + object.className)
             .data(dataLine)
             .enter()
             .append("path")
-            .attr("clip-path", "url(#clip)")
-            .attr("d", this.commons.lineBond)
+            .attr("d", this.commons.line)
             .attr("class", "line " + object.className)
             .style("z-index", "0")
-            .style("stroke", 'grey')
-            .style("fill", "none")
+            .style("stroke", "grey")
             .style("stroke-width", "1px");*/
 
-        pathsDB.selectAll("." + object.className)
+        pathsDB.selectAll(".path" + object.className)
             .data(object.data)
             .enter()
             .append("path")
-            .attr("clip-path", "url(#clip)")
+            //.attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
                 return "f_" + d[0].id + Math.random().toString(36).substring(7);
@@ -770,6 +764,9 @@ class FillSVG extends ComputingFunctions {
             .call(this.commons.d3helper.tooltip(object));
 
         this.forcePropagation(pathsDB);
+        // re-init object.heigth
+        // object.height = undefined;
+
     }
 
     public fillSVGLine(object, position = 0) {
@@ -811,16 +808,13 @@ class FillSVG extends ComputingFunctions {
                 .data(dd)
                 .enter()
                 .append("path")
-                .attr("clip-path", "url(#clip)")
+                //.attr("clip-path", "url(#clip)") // firefox compatibility
                 .attr("class", "element " + object.className + " " + object.className + i)
                 // d3 v4
-                .attr("d", (object) => {
-                    if (object.interpolation){
-                        this.commons.lineGen.curve(d3[object.interpolation]())
-                    } else {
-                        this.commons.lineGen.curve(d3.curveBasis)
-                    }
-                })
+                .attr("d", this.commons.lineGen.y((d) => {
+                        return this.commons.lineYScale(-d.y) * 10 + object.shift;
+                    })
+                )
                 //.style("fill", object.fill ? this.shadeBlendConvert(0.6, object.color[i]) || this.shadeBlendConvert(0.6, "#000") : "none")
                 .style("fill", object.color)
                 .style("fill-opacity", "0.8")
@@ -830,6 +824,8 @@ class FillSVG extends ComputingFunctions {
                 .call(this.commons.d3helper.tooltip(object));
 
         });
+
+        //object.height = undefined;
 
         // for tooltips
         /*let toolContainer = histoG
@@ -896,7 +892,7 @@ class FillSVG extends ComputingFunctions {
             .data(object.data)
             .enter()
             .append("rect")
-            .attr("clip-path", "url(#clip)")
+            //.attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
                 return "f_" + object.id + Math.random().toString(36).substring(7);

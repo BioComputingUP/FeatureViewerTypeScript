@@ -15,7 +15,7 @@ class Tool extends Calculate {
         // color selected rectangle
         if (object.type !== "path" && object.type !== "curve" && feat) {
 
-            this.commons.featureSelected = feat.id;
+            this.commons.featureSelected = feat;
             let thisfeat = d3.select(`#${divId}`).select(`#${feat}`);
             thisfeat.style("fill-opacity", "1");
 
@@ -104,29 +104,17 @@ class Tool extends Calculate {
                     tooltip_message += '</p>';
                 }
                 // case of button
-                if (thing.hasOwnProperty('message')) {
-                    tooltip_message += '<p style="margin:2px;font-weight:700;">';
-                    tooltip_message += thing.message;
-                    tooltip_message += '</p>';
-                }
-
-            }
-
-            if (thing.hasOwnProperty('tooltip')) {
-                // second line
-                let second_line_text = '';
                 if (thing.hasOwnProperty('tooltip')) {
-                    second_line_text += thing.tooltip
-                }
-                if (second_line_text && second_line_text !== '' && second_line_text !== 'undefined') {
-                    tooltip_message += '<p style="margin:2px; font-weight:700;">';
-                    tooltip_message += second_line_text;
+                    tooltip_message += '<p style="margin:2px;font-weight:700;">';
+                    tooltip_message += thing.tooltip;
                     tooltip_message += '</p>';
                 }
+
             }
 
             return tooltip_message
         };
+
         let drawTooltip = (tooltipDiv, absoluteMousePos) => {
             // angular material tooltip
             tooltipDiv
@@ -214,10 +202,11 @@ class Tool extends Calculate {
 
         };
 
-        this.commons.d3helper.genericTooltip = (message) => {
+        this.commons.d3helper.genericTooltip = (object) => {
 
             let tooltipDiv = this.commons.tooltipDiv;
             let bodyNode = d3.select(div).node();
+            let message = object.tooltip;
 
             let tooltip = (selection) => {
 
@@ -230,13 +219,15 @@ class Tool extends Calculate {
                     left = absoluteMousePos[0].toString();
                     top = absoluteMousePos[1].toString();
 
-                    tooltipDiv.transition()
-                        .duration(200)
-                        .style("opacity", 1);
-                    tooltipDiv
-                        .html(message)
-                        .style("left", left+'px')
-                        .style("top", top+'px');
+                    if (message) {
+                        tooltipDiv.transition()
+                            .duration(200)
+                            .style("opacity", 1);
+                        tooltipDiv
+                            .html(message)
+                            .style("left", left+'px')
+                            .style("top", top+'px');
+                    }
                 };
 
                 selection
@@ -253,6 +244,11 @@ class Tool extends Calculate {
                             .duration(500)
                             .style("opacity", 0);
                     })
+                    .on('click', (pD) => {
+                        // TODO
+                        // from message to object with button id too
+                        this.clickTagFunction(object)
+                    })
             };
 
             return tooltip;
@@ -265,8 +261,7 @@ class Tool extends Calculate {
             let viewerWidth = this.commons.viewerOptions.width;
 
             let bodyNode = d3.select(div).node();
-            // TODO: use this
-            let tooltipColor = this.commons.viewerOptions.tooltipColor ? this.commons.viewerOptions.tooltipColor : "#fff";
+            // let tooltipColor = this.commons.viewerOptions.tooltipColor ? this.commons.viewerOptions.tooltipColor : "#fff";
 
             let tooltip = (selection) => {
 
@@ -293,7 +288,11 @@ class Tool extends Calculate {
                 let getMyMessage = (pD) => {
                     let tooltip_message = '';
                     if (object.type === "path") {
-                        tooltip_message = getMessage(pD[0]);
+                        let reformat = {
+                            x: pD[0].x,
+                            y: pD[1].x
+                        }
+                        tooltip_message = getMessage(reformat);
                     }
                     else if (object.type === "curve") {
                         let elemHover = updateLineTooltipFunction(absoluteMousePos[0], pD, scalingFunction, labelTrackWidth);
@@ -311,10 +310,11 @@ class Tool extends Calculate {
                 };
 
                 let drawMyTooltip = (pD) => {
+
                     absoluteMousePos = d3.mouse(bodyNode);
                     let positions = getPositions(absoluteMousePos);
-                    let tooltip_message = getMyMessage(pD);
 
+                    let tooltip_message = getMyMessage(pD);
                     tooltipDiv.transition()
                         .duration(200)
                         .style("opacity", 1);
@@ -322,10 +322,10 @@ class Tool extends Calculate {
                         .html(tooltip_message)
                         .style("left", positions['left']+'px')
                         .style("top", positions['top']+'px');
+
                 };
 
                 selection
-                // tooltip
                     .on("mouseover", (pD) => {
                         drawMyTooltip(pD);
                     })
@@ -339,6 +339,7 @@ class Tool extends Calculate {
                     })
                     .on('click', (pD) => {
 
+                        // not button: flag
                         if (object.type !== "button") { // rect
 
                             // TODO: define data for event exporting when clicking rects
@@ -357,7 +358,7 @@ class Tool extends Calculate {
                             };
 
                             // path is array of pD, line is elemHover, all the rest is a pD object
-                            object['selectedFeature'] = forSelection;
+                            object['selectedRegion'] = forSelection;
                             let feature_detail_object = object;
 
                             this.colorSelectedFeat(pD.id, object, divId);
@@ -381,9 +382,10 @@ class Tool extends Calculate {
                         }
                     });
             };
-
+            
             return tooltip;
         };
+
     }
 
     constructor(commons: {}) {

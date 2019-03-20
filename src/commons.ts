@@ -24,9 +24,7 @@ class Commons {
         flagColor: "#DFD5D3",
         tooltipColor: '#fff',
         showSubFeatures: true,
-        showDisorderContentTag: false,
-        showLinkTag: false,
-        buttonTrack: false,
+        sideBar: true,
         labelTrackWidth: 0,
         tagsTrackWidth: 0,
         mobileMode: false,
@@ -69,6 +67,7 @@ class Commons {
     public svgContainer: any;
     public tagsContainer: any;
     public tooltipDiv: any;
+    public divId: string;
     public right_chevron: any;
     public down_chevron: any;
     public yAxisSVG: any;

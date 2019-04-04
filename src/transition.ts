@@ -32,7 +32,6 @@ export class Transition extends ComputingFunctions {
     public basalLine(object) {
 
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);
-        console.log(object.id, container.selectAll(".line"), this.commons.line)
         container.selectAll(".line")
             .attr("d", this.commons.line);
 

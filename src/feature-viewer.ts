@@ -1077,6 +1077,7 @@ class FeatureViewer {
         });
 
         if (this.commons.viewerOptions.showSequence) {
+            console.log('here >>>' > this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start))
             if (this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }

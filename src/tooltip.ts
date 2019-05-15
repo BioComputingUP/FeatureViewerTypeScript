@@ -32,6 +32,10 @@ class Tool extends Calculate {
                     .attr("class", "selectionRect box-shadow")
                     // add shadow?
                     .attr("height", currentContainer.height)
+                    // remove click
+                    /*.on('click', () => {
+                        null
+                    });*/
             }
             let thisy = this.getTransf((<HTMLElement>thisfeat.node()).parentElement)[0];
 

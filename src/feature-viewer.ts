@@ -250,9 +250,10 @@ class FeatureViewer {
             })
             .attr("class", "flag")
             .on('click', (d) => {
-                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                    this.clickFlagFunction(d)
-                }
+                // if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                //     this.clickFlagFunction(d)
+                // }
+                this.clickFlagFunction(d)
             })
             .call(this.commons.d3helper.flagTooltip());
             //.call(d3.helper.genericTooltip({}));
@@ -395,20 +396,22 @@ class FeatureViewer {
             let eventDetail = {detail: flag_detail_object},
                 event = new CustomEvent(this.commons.events.FLAG_SELECTED_EVENT, eventDetail);
 
-            this.commons.flagSelected.push(flag_detail_object.id);
-            this.commons.svgElement.dispatchEvent(event);
+            if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                this.commons.flagSelected.push(flag_detail_object.id);
+                this.commons.svgElement.dispatchEvent(event);
 
-            // let featureToChange = this.searchTree(this.commons.features, flag_detail_object.id)
-            var i;
-            var result = null;
-            for (i = 0; result == null && i < this.commons.features.length; i++) {
-                result = this.searchTree(this.commons.features[i], flag_detail_object.id);
-            }
-            let featureToChange = result;
-            if (featureToChange) {
-                this.changeFeature(featureToChange, !featureToChange.isOpen);
-            } else {
-                this.commons.logger.warn("Feature not found in feature array", {fvId:this.divId, featureId:flag_detail_object.id})
+                // let featureToChange = this.searchTree(this.commons.features, flag_detail_object.id)
+                var i;
+                var result = null;
+                for (i = 0; result == null && i < this.commons.features.length; i++) {
+                    result = this.searchTree(this.commons.features[i], flag_detail_object.id);
+                }
+                let featureToChange = result;
+                if (featureToChange) {
+                    this.changeFeature(featureToChange, !featureToChange.isOpen);
+                } else {
+                    this.commons.logger.warn("Feature not found in feature array", {fvId:this.divId, featureId:flag_detail_object.id})
+                }
             }
 
 
@@ -441,6 +444,8 @@ class FeatureViewer {
     };
 
     private brushend() {
+
+        // zoom and unzoom
 
         // remove selected features
         if (this.commons.featureSelected) {
@@ -493,9 +498,8 @@ class FeatureViewer {
                     this.transition_data(this.commons.features, currentShift);
                     this.reset_axis();
 
-                    // deprecated: not necessary
                     // remove sequence
-                    /*this.commons.svgContainer.select(".mySequence").remove();
+                    this.commons.svgContainer.select(".mySequence").remove();
                     // draw sequence
                     if (this.commons.viewerOptions.showSequence) {
                         if (seqCheck === false) {
@@ -505,7 +509,7 @@ class FeatureViewer {
                             this.commons.seqShift = start;
                             this.fillSVG.sequence(this.sequence.substring(start, end), this.commons.seqShift);
                         }
-                    }*/
+                    }
 
                 } else {
 
@@ -1072,27 +1076,40 @@ class FeatureViewer {
                 pos = posN.toString();
             }
 
-            // d3.select(`${this.divId} #zoomPosition`).text(pos);
-            document.querySelector(`#${this.divId} #zoomPosition`).innerHTML = pos;
+            if (this.commons.viewerOptions.toolbar) {
+                // d3.select(`${this.divId} #zoomPosition`).text(pos);
+                document.querySelector(`#${this.divId} #zoomPosition`).innerHTML = pos;
+            };
         });
 
         if (this.commons.viewerOptions.showSequence) {
-            console.log('here >>>' > this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start))
             if (this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
             else {
                 this.fillSVG.sequenceLine();
             }
-            this.commons.features.push({
-                data: this.sequence,
-                label: "Sequence",
-                className: "AA",
-                color: "black",
-                type: "sequence",
-                id: "sequence"
-            });
+            // check if sequence already initialized, alse add it to yData
+            // if (this.commons.yData.filter((e) => {e.id === 'fv_sequence'}).length === 0) {
+            //     // features
+            //     // this.commons.features.push({
+            //     //     data: this.sequence,
+            //     //     label: "Sequence",
+            //     //     className: "AA",
+            //     //     color: "black",
+            //     //     type: "sequence",
+            //     //     id: "fv_sequence"
+            //     // });
+            //     // yData
+            //     this.commons.yData.push({
+            //         id: "fv_sequence",
+            //         label: "Sequence",
+            //         y: this.commons.YPosition - 8,
+            //         flagLevel: 1
+            //     });
+            // }
             this.commons.yData.push({
+                id: "fv_sequence",
                 label: "Sequence",
                 y: this.commons.YPosition - 8,
                 flagLevel: 1
@@ -1322,15 +1339,22 @@ class FeatureViewer {
 
     public emptyFeatures() {
 
+        // clean feature object
         let deepCopy = JSON.parse(JSON.stringify(this.commons.features))
-
         for (const ft of this.commons.features) {
             this.recursivelyRemove(ft)
         };
 
+        function checkSequence(ft) {
+            return ft.id === 'fv_sequence';
+        }
+
+
         // re-init features and yData
-        this.commons.features = [];
-        this.commons.yData = [];
+        // this.commons.features = [];
+        // this.commons.yData = [];
+        this.commons.features = this.commons.features.filter(checkSequence)
+        this.commons.yData = this.commons.yData.filter(checkSequence);
 
         // fix axis
         this.updateXAxis(this.commons.step)

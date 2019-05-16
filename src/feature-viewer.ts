@@ -395,10 +395,10 @@ class FeatureViewer {
 
             let eventDetail = {detail: flag_detail_object},
                 event = new CustomEvent(this.commons.events.FLAG_SELECTED_EVENT, eventDetail);
+            this.commons.svgElement.dispatchEvent(event);
 
             if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                 this.commons.flagSelected.push(flag_detail_object.id);
-                this.commons.svgElement.dispatchEvent(event);
 
                 // let featureToChange = this.searchTree(this.commons.features, flag_detail_object.id)
                 var i;

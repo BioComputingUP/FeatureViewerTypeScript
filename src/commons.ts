@@ -67,6 +67,7 @@ class Commons {
     public svgContainer: any;
     public tagsContainer: any;
     public tooltipDiv: any;
+    public customTooltipDiv: any;
     public divId: string;
     public right_chevron: any;
     public down_chevron: any;

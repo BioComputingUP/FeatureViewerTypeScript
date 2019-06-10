@@ -271,7 +271,6 @@ class FeatureViewer {
                 return this.calculate.yxPoints(d)
             })
             .style("fill", (d) => {
-                // if (d.filter && d.filter == "subFeature") return flagColor; // change here if you want different color for subFeatures
                 if (d.flagColor) return d.flagColor;
                 return this.commons.viewerOptions.flagColor // or flagColor
             });
@@ -301,45 +300,6 @@ class FeatureViewer {
                     return ''
                 }
             });
-
-        // text (label)
-        /*this.commons.yAxisSVGGroup
-            .append("text")
-            .attr("class", "yAxis")
-            .attr("font-family", "Roboto")
-            .attr("fill", "rgba(39, 37, 37, 0.9)")
-            .style("display", (d) => {
-                // text only if space is enough
-                if (this.commons.viewerOptions.mobileMode) {
-                    return "none";
-                } else {
-                    return "block";
-                }
-            })
-            .attr("x", (d) => {
-                let cvm = 0;
-                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                    // chevron margin
-                    cvm = 22
-                }
-                // horizontal flag placement
-                this.commons.headMargin = 0;
-                if (d.flagLevel) {
-                    this.commons.headMargin = 20 * (d.flagLevel - 1);
-                    return cvm + this.commons.headMargin + 8;
-                } else {
-                    return cvm + 8
-                }
-            })
-            .attr("y", function (d) {
-                // vertical flag placement
-                return d.y + 12
-            })
-            // check if label is string or html
-            .text((d) => {
-                // text only if space is enough
-                return d.label;
-            });*/
 
         this.commons.yAxisSVGGroup
             .append("foreignObject")
@@ -371,7 +331,14 @@ class FeatureViewer {
                 // vertical flag placement
                 return d.y
             })
-            .attr("width", this.commons.viewerOptions.margin.left - 20)
+            .attr("width", (d) => {
+                // text only if space is enough
+                if (this.commons.viewerOptions.mobileMode) {
+                    return "15px";
+                } else {
+                    return this.commons.viewerOptions.margin.left - 7;
+                }
+            })
             .attr("height", this.commons.step)
             .html((d) => {
                 // text only if space is enough
@@ -446,6 +413,13 @@ class FeatureViewer {
     private brushend() {
 
         // zoom and unzoom
+
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+        this.commons.customTooltipDiv.status == 'closed';
+
 
         // remove selected features
         if (this.commons.featureSelected) {
@@ -681,6 +655,12 @@ class FeatureViewer {
             }
         }
 
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+        this.commons.customTooltipDiv.status == 'closed';
+
         this.commons.current_extend = {
             length: this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start,
             start: this.commons.viewerOptions.offset.start,
@@ -873,11 +853,16 @@ class FeatureViewer {
         this.commons.right_chevron = "M12.95 10.707l0.707-0.707-5.657-5.657-1.414 1.414 4.242 4.243-4.242 4.243 1.414 1.414 4.95-4.95z"
         this.commons.down_chevron = "M9.293 12.95l0.707 0.707 5.657-5.657-1.414-1.414-4.243 4.242-4.243-4.242-1.414 1.414z"
 
-        // Define the div for the tooltip
+        // Define the divs for the tooltip
         this.commons.tooltipDiv = d3.select(`#${this.divId}`)
             .append("div")
             .attr("class", "fvtooltip")
             .attr("id", "fvtooltip")
+            .style("opacity", 0);
+        this.commons.customTooltipDiv = d3.select(`#${this.divId}`)
+            .append("div")
+            .attr("class", "fvtooltip")
+            .attr("id", "fvcustomtooltip")
             .style("opacity", 0);
 
         this.commons.style = d3.select(`#${this.divId}`)
@@ -1025,6 +1010,7 @@ class FeatureViewer {
                 if (this.commons.trigger) this.commons.trigger(this.commons.events.CLEAR_SELECTION_EVENT);
             })
             .on("contextmenu", (d, i) => {
+                console.log("contextmenu")
                 // react on right click
                 this.resetAll();
                 if (CustomEvent) {
@@ -1202,7 +1188,7 @@ class FeatureViewer {
         }
 
         if (!object.color) {
-            object.color = "lightgrey";
+            object.color = "#DFD5F5";
         }
 
         //object.height = this.commons.elementHeight;

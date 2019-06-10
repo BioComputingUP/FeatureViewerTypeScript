@@ -107,12 +107,12 @@ class Tool extends Calculate {
                     }
                     tooltip_message += '</p>';
                 }
-                // case of button
-                if (thing.hasOwnProperty('tooltip')) {
-                    tooltip_message += '<p style="margin:2px;font-weight:700;">';
-                    tooltip_message += thing.tooltip;
-                    tooltip_message += '</p>';
-                }
+                // case of feature
+                // if (thing.hasOwnProperty('tooltip')) {
+                //     tooltip_message += '<p style="margin:2px;font-weight:700;">';
+                //     tooltip_message += thing.tooltip;
+                //     tooltip_message += '</p>';
+                // }
 
             }
 
@@ -262,6 +262,7 @@ class Tool extends Calculate {
         this.commons.d3helper.tooltip = (object) => {
 
             let tooltipDiv = this.commons.tooltipDiv;
+            let customTooltipDiv = this.commons.customTooltipDiv;
             let viewerWidth = this.commons.viewerOptions.width;
 
             let bodyNode = d3.select(div).node();
@@ -271,16 +272,19 @@ class Tool extends Calculate {
 
                 let absoluteMousePos;
 
-                let getPositions = (absoluteMousePos) => {
+                let getPositions = (absoluteMousePos, customwidth?: number) => {
                     let rightSide = (absoluteMousePos[0] > viewerWidth);
+                    if (!customwidth) {
+                        customwidth = 55;
+                    }
                     let left = 0,
                         top = 0;
                     if (rightSide) {
                         left = absoluteMousePos[0] + 10 - (tooltipDiv.node().getBoundingClientRect().width);
-                        top = absoluteMousePos[1] - 55;
+                        top = absoluteMousePos[1] - customwidth;
                     } else {
                         left = absoluteMousePos[0] - 15;
-                        top = absoluteMousePos[1] - 55;
+                        top = absoluteMousePos[1] - customwidth;
                     }
                     let positions = {
                         left: left,
@@ -308,6 +312,7 @@ class Tool extends Calculate {
                     else if (object.type === "button") {
                         tooltip_message = getMessage(object);
                     } else {
+                        // e.g. rect
                         tooltip_message = getMessage(pD);
                     }
                     return tooltip_message
@@ -317,8 +322,8 @@ class Tool extends Calculate {
 
                     absoluteMousePos = d3.mouse(bodyNode);
                     let positions = getPositions(absoluteMousePos);
-
                     let tooltip_message = getMyMessage(pD);
+
                     tooltipDiv.transition()
                         .duration(200)
                         .style("opacity", 1);
@@ -328,6 +333,44 @@ class Tool extends Calculate {
                         .style("top", positions['top']+'px');
 
                 };
+
+                let drawCustomTooltip = (tooltiphtml) => {
+
+                    // remove tooltip div
+                    tooltipDiv.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+
+                    // open tooltip if no source or if source is click and status is open
+                    absoluteMousePos = d3.mouse(bodyNode);
+                    let positions = getPositions(absoluteMousePos, 100);
+
+                    // console.log('Selection:', d3.select(`#customTooltipDivContent`))
+                    // d3.select(`#customTooltipDivContent`).html(tooltiphtml)
+
+                    if (customTooltipDiv.select('foreignObject').empty()) {
+                        customTooltipDiv.transition()
+                            .duration(200)
+                            .style("opacity", 1);
+                        customTooltipDiv
+                            .style("left", positions['left']+'px')
+                            .style("top", positions['top']+'px')
+                            .append('foreignObject') // foreignObject can be styled with no limitation by user
+                            .attr("width", "100%")
+                            .attr("height", "100%")
+                            .html(tooltiphtml)
+                        customTooltipDiv.status == 'open';
+                    } else {
+                        customTooltipDiv.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                        customTooltipDiv.html("");
+                        customTooltipDiv.status == 'closed';
+                    }
+
+
+
+                }
 
                 selection
                     .on("mouseover", (pD) => {
@@ -343,8 +386,8 @@ class Tool extends Calculate {
                     })
                     .on('click', (pD) => {
 
-                        // not button: flag
-                        if (object.type !== "button") { // rect
+                        // not button: feature
+                        if (object.type !== "button") { // feature
 
                             // TODO: define data for event exporting when clicking rects
                             // TODO: fix exports.event.target.__data__ is undefined
@@ -365,6 +408,12 @@ class Tool extends Calculate {
                             object['selectedRegion'] = forSelection;
                             let feature_detail_object = object;
 
+                            if (pD.tooltip || object.tooltip) {
+                                let html = ''
+                                if (pD.tooltip) html = pD.tooltip
+                                else html = object.tooltip;
+                                drawCustomTooltip(html);
+                            }
                             this.colorSelectedFeat(pD.id, object, divId);
 
 

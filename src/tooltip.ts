@@ -272,23 +272,21 @@ class Tool extends Calculate {
 
                 let absoluteMousePos;
 
-                let getPositions = (absoluteMousePos, customwidth?: number) => {
+                let getPositions = (absoluteMousePos) => {
                     let rightSide = (absoluteMousePos[0] > viewerWidth);
-                    if (!customwidth) {
-                        customwidth = 55;
-                    }
+                    let topshift = 25;
                     let left = 0,
                         top = 0;
                     if (rightSide) {
                         left = absoluteMousePos[0] + 10 - (tooltipDiv.node().getBoundingClientRect().width);
-                        top = absoluteMousePos[1] - customwidth;
+                        top = absoluteMousePos[1] - topshift;
                     } else {
                         left = absoluteMousePos[0] - 15;
-                        top = absoluteMousePos[1] - customwidth;
+                        top = absoluteMousePos[1] - topshift;
                     }
                     let positions = {
-                        left: left,
-                        top: top
+                        top: top,
+                        left: left
                     };
                     return positions
                 };
@@ -343,29 +341,35 @@ class Tool extends Calculate {
 
                     // open tooltip if no source or if source is click and status is open
                     absoluteMousePos = d3.mouse(bodyNode);
-                    let positions = getPositions(absoluteMousePos, 100);
+                    let clickposition = (this.commons.viewerOptions.width/2) - absoluteMousePos[0] > 0 ? -1 : 1;
+                    let positions = getPositions(absoluteMousePos);
 
                     // console.log('Selection:', d3.select(`#customTooltipDivContent`))
                     // d3.select(`#customTooltipDivContent`).html(tooltiphtml)
 
-                    if (customTooltipDiv.select('foreignObject').empty()) {
-                        customTooltipDiv.transition()
-                            .duration(200)
-                            .style("opacity", 1);
-                        customTooltipDiv
-                            .style("left", positions['left']+'px')
-                            .style("top", positions['top']+'px')
-                            .append('foreignObject') // foreignObject can be styled with no limitation by user
-                            .attr("width", "100%")
-                            .attr("height", "100%")
-                            .html(tooltiphtml)
-                        customTooltipDiv.status == 'open';
-                    } else {
-                        customTooltipDiv.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                        customTooltipDiv.html("");
-                        customTooltipDiv.status == 'closed';
+                    // now fill it
+                    customTooltipDiv.transition()
+                        .duration(200)
+                        .style("opacity", 1);
+                    customTooltipDiv
+                        .style("top", positions['top']+'px')
+                        .style("left", positions['left']+'px')
+                        .append('foreignObject') // foreignObject can be styled with no limitation by user
+                        .attr("width", "100%")
+                        .attr("height", "100%")
+                        .html(tooltiphtml)
+                    // transition if clickposition
+                    if (clickposition) {
+                        customTooltipDiv.style("top", (positions['top']+35)+'px')
+                    }
+                    if (clickposition == 1) {
+                        let transitiondata = customTooltipDiv.node().getBoundingClientRect()
+                        if (transitiondata) {
+                            customTooltipDiv.style("left", (positions['left']-transitiondata.width+55)+'px')
+                            // customTooltipDiv.transition()
+                            //     .duration(500)
+                            //     .style("left", transitiondata.width);
+                        }
                     }
 
 
@@ -407,6 +411,12 @@ class Tool extends Calculate {
                             // path is array of pD, line is elemHover, all the rest is a pD object
                             object['selectedRegion'] = forSelection;
                             let feature_detail_object = object;
+
+                            // empty customtooltip before
+                            this.commons.customTooltipDiv.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                            this.commons.customTooltipDiv.html("");
 
                             if (pD.tooltip || object.tooltip) {
                                 let html = ''

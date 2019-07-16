@@ -348,6 +348,20 @@ class FeatureViewer {
 
     private clickFlagFunction(d) {
 
+        // remove selected features
+        if (this.commons.featureSelected) {
+            d3.select(`#${this.divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
+            this.commons.featureSelected = null;
+        }
+        // remove selection rectangle
+        d3.select(`#${this.divId}`).select(".selectionRect").remove();
+
+        // empty custom tooltip
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+
         // dispatches selected flag event
         let id = d.id;
         let flag_detail_object = {
@@ -626,12 +640,17 @@ class FeatureViewer {
 
     private resetAll() {
 
+        // empty custom tooltip in reset
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+
         // remove selected features
         if (this.commons.featureSelected) {
             d3.select(`#${this.divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
             this.commons.featureSelected = null;
         }
-
         // remove selection rectangle
         d3.select(`#${this.divId}`).select(".selectionRect").remove();
 
@@ -861,7 +880,7 @@ class FeatureViewer {
             .style("opacity", 0);
         this.commons.customTooltipDiv = d3.select(`#${this.divId}`)
             .append("div")
-            .attr("class", "fvtooltip")
+            .attr("class", "fvcustomtooltip")
             .attr("id", "fvcustomtooltip")
             .style("opacity", 0);
 
@@ -1010,7 +1029,6 @@ class FeatureViewer {
                 if (this.commons.trigger) this.commons.trigger(this.commons.events.CLEAR_SELECTION_EVENT);
             })
             .on("contextmenu", (d, i) => {
-                console.log("contextmenu")
                 // react on right click
                 this.resetAll();
                 if (CustomEvent) {

@@ -98,6 +98,17 @@ foreignObject > body {
 
 }
 
+// fv custom tooltips
+.fvcustomtooltip {
+  position: absolute;
+  text-align: center;
+  color: white;
+  height: auto;
+  background-color:rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+
+}
+
 
 // loading
 .pageoverlay {

@@ -177,6 +177,7 @@ class FeatureViewer {
         // let totalwidth = d3.select(`#${this.divId}`).node().getBoundingClientRect().width;
         let myd3node = d3.select(`#${this.divId}`).node();
         let totalwidth = (<HTMLElement>myd3node).getBoundingClientRect().width;
+        // let totalwidth = d3.select(`#${this.divId}`).node().getBoundingClientRect().width;
         if (totalwidth < this.commons.mobilesize) {
             this.commons.viewerOptions.mobileMode = true;
             this.commons.viewerOptions.margin.left = 40;
@@ -316,7 +317,7 @@ class FeatureViewer {
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                     // chevron margin
-                    cvm = 22
+                    cvm = 17
                 }
                 // horizontal flag placement
                 this.commons.headMargin = 0;
@@ -336,10 +337,11 @@ class FeatureViewer {
                 if (this.commons.viewerOptions.mobileMode) {
                     return "15px";
                 } else {
-                    return this.commons.viewerOptions.margin.left - 7;
+                    let margin = 20 * (d.flagLevel - 1)
+                    return this.commons.viewerOptions.margin.left - (18+margin); // chevron margin and text indent
                 }
             })
-            .attr("height", this.commons.step)
+            .attr("height", this.commons.step - 11)
             .html((d) => {
                 // text only if space is enough
                 return d.label;
@@ -638,7 +640,7 @@ class FeatureViewer {
 
     }
 
-    private resetAll() {
+    public resetAll() {
 
         // empty custom tooltip in reset
         this.commons.customTooltipDiv.transition()
@@ -740,33 +742,6 @@ class FeatureViewer {
         this.commons.svgContainer
             .select(".x.axis")
             .call(this.commons.xAxis);
-    }
-
-    private addVerticalLine() {
-        let vertical = d3.select(`#${this.divId}`).select(".chart")
-            .append("div")
-            .attr("class", "VLine")
-            .style("position", "absolute")
-            .style("z-index", "19")
-            .style("width", "1px")
-            .style("height", (this.commons.YPosition + 50) + "px")
-            .style("top", "30px")
-            // .style("left", "0px")
-            .style("background", "#000");
-
-        // uncompatible with d3 types
-        /*d3.select(`#${this.divId}`).select(".chart")
-            .on("mousemove.VLine", function () {
-                let mouseX = d3.mouse(this)[0] - 2;
-                // let mouseX = d3.mouse(this)[0] - 2;
-                vertical.style("left", mouseX + "px")
-            });*/
-
-
-        //.on("click", function(){
-        //    mouseX = d3.mouse(this);
-        //    mouseX = mouseX[0] + 5;
-        //    vertical.style("left", mouseX + "px")});
     }
 
     private init(div) {
@@ -1143,39 +1118,6 @@ class FeatureViewer {
 
     }
 
-    private getTransformation(transform) {
-        // Create a dummy g for calculation purposes only. This will never
-        // be appended to the DOM and will be discarded once this function
-        // returns.
-        var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-        // Set the transform attribute to the provided string value.
-        g.setAttributeNS(null, "transform", transform);
-
-        // consolidate the SVGTransformList containing all transformations
-        // to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
-        // its SVGMatrix.
-        var matrix = g.transform.baseVal.consolidate().matrix;
-
-        // Below calculations are taken and adapted from the private function
-        // transform/decompose.js of D3's module d3-interpolate.
-        var {a, b, c, d, e, f} = matrix;   // ES6, if this doesn't work, use below assignment
-        // var a=matrix.a, b=matrix.b, c=matrix.c, d=matrix.d, e=matrix.e, f=matrix.f; // ES5
-        var scaleX, scaleY, skewX;
-        if (scaleX = Math.sqrt(a * a + b * b)) a /= scaleX, b /= scaleX;
-        if (skewX = a * c + b * d) c -= a * skewX, d -= b * skewX;
-        if (scaleY = Math.sqrt(c * c + d * d)) c /= scaleY, d /= scaleY, skewX /= scaleY;
-        if (a * d < b * c) a = -a, b = -b, skewX = -skewX, scaleX = -scaleX;
-        return {
-            translateX: e,
-            translateY: f,
-            rotate: Math.atan2(b, a) * 180 / Math.PI,
-            skewX: Math.atan(skewX) * 180 / Math.PI,
-            scaleX: scaleX,
-            scaleY: scaleY
-        };
-    }
-
     private addFeatureCore(object, flagLevel = 1, position = null) {
 
         this.commons.YPosition += this.commons.step;
@@ -1232,7 +1174,7 @@ class FeatureViewer {
         alert(helpContent)
     }
 
-    private downloadSVG() {
+    public downloadSVG() {
 
         let filename = this.divId + "_feature_viewer.png";
 
@@ -1343,6 +1285,8 @@ class FeatureViewer {
 
     public emptyFeatures() {
 
+        this.resetAll()
+
         // clean feature object
         let deepCopy = JSON.parse(JSON.stringify(this.commons.features))
         for (const ft of this.commons.features) {
@@ -1379,7 +1323,6 @@ class FeatureViewer {
         return deepCopy
 
     }
-
 
     /**
      * @function

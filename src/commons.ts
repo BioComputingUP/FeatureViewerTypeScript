@@ -53,7 +53,7 @@ class Commons {
     public flagsHeight = 18;
     public maxNumberOfButtons = 0;
     public features: FeaturesList;
-    public yData: MyType[] = [];
+    public yData: any;
     public seqShift = 1;
     public scalingPosition: any;
     public lineYScale: any;

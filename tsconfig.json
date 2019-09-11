@@ -3,7 +3,7 @@
     "declaration": true,
     "target": "es2015",
     "module": "commonjs",
-    "moduleResolution": "Classic",
+    "moduleResolution": "node",
     "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
@@ -11,7 +11,8 @@
     "typeRoots" : ["./node_modules/@types"],
     "types" : [
       "d3",
-      "underscore"
+      "underscore",
+      "html-to-image"
     ],
     "outDir": "./lib"
   },

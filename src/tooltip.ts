@@ -6,12 +6,11 @@ class Tool extends Calculate {
 
     private calculate: Calculate;
 
-    private colorSelectedFeat(feat, object, divId) {
+    public colorSelectedFeat(feat, object, divId) {
         // remove previous selected features
         if (this.commons.featureSelected) {
             d3.select(`#${divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
         }
-
         // color selected rectangle
         if (object.type !== "path" && object.type !== "curve" && feat) {
 
@@ -32,10 +31,6 @@ class Tool extends Calculate {
                     .attr("class", "selectionRect box-shadow")
                     // add shadow?
                     .attr("height", currentContainer.height)
-                    // remove click
-                    /*.on('click', () => {
-                        null
-                    });*/
             }
             let thisy = this.getTransf((<HTMLElement>thisfeat.node()).parentElement)[0];
 
@@ -49,6 +44,10 @@ class Tool extends Calculate {
                 })
         }
     };
+
+    public colorSelectedCoordinates(start, end, divId) {
+
+    }
 
     private updateLineTooltip(mouse, pD, scalingFunction, labelTrackWidth) {
         let xP = mouse - labelTrackWidth;
@@ -318,17 +317,24 @@ class Tool extends Calculate {
 
                 let drawMyTooltip = (pD) => {
 
-                    absoluteMousePos = d3.mouse(bodyNode);
-                    let positions = getPositions(absoluteMousePos);
-                    let tooltip_message = getMyMessage(pD);
+                    if (pD.tooltip || object.tooltip) {
+                        customTooltipDiv.html("");
+                        let html = '';
+                        if (pD.tooltip) { html = pD.tooltip } else { html = object.tooltip; }
+                        drawCustomTooltip(html);
+                    } else {
+                        absoluteMousePos = d3.mouse(bodyNode);
+                        let positions = getPositions(absoluteMousePos);
+                        let tooltip_message = getMyMessage(pD);
 
-                    tooltipDiv.transition()
-                        .duration(200)
-                        .style("opacity", 1);
-                    tooltipDiv
-                        .html(tooltip_message)
-                        .style("left", positions['left']+'px')
-                        .style("top", positions['top']+'px');
+                        tooltipDiv.transition()
+                            .duration(200)
+                            .style("opacity", 1);
+                        tooltipDiv
+                            .html(tooltip_message)
+                            .style("left", positions['left']+'px')
+                            .style("top", positions['top']+'px');
+                    }
 
                 };
 
@@ -383,10 +389,19 @@ class Tool extends Calculate {
                     .on('mousemove', (pD) => {
                         drawMyTooltip(pD);
                     })
-                    .on("mouseout", function(d) {
-                        tooltipDiv.transition()
-                            .duration(500)
-                            .style("opacity", 0);
+                    .on("mouseout", function(pD) {
+                        if (pD.tooltip || object.tooltip) {
+                            // remove custom tooltip
+                            customTooltipDiv.html("");
+                            customTooltipDiv.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        } else {
+                            // remove normal tooltip
+                            tooltipDiv.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        }
                     })
                     .on('click', (pD) => {
 
@@ -412,18 +427,6 @@ class Tool extends Calculate {
                             object['selectedRegion'] = forSelection;
                             let feature_detail_object = object;
 
-                            // empty customtooltip before
-                            this.commons.customTooltipDiv.transition()
-                                .duration(500)
-                                .style("opacity", 0);
-                            this.commons.customTooltipDiv.html("");
-
-                            if (pD.tooltip || object.tooltip) {
-                                let html = ''
-                                if (pD.tooltip) html = pD.tooltip
-                                else html = object.tooltip;
-                                drawCustomTooltip(html);
-                            }
                             this.colorSelectedFeat(pD.id, object, divId);
 
 

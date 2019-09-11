@@ -7,6 +7,7 @@
 import * as d3 from './custom-d3'
 import {event as currentEvent} from 'd3-selection';
 import * as _ from 'underscore';
+import htmlToImage from 'html-to-image';
 
 import {UserOptions} from './interfaces';
 import {FeaturesList, FeatureObject} from './interfaces';
@@ -19,7 +20,6 @@ import Tool from "./tooltip";
 
 
 import * as fvstyles from './../assets/fv.scss';
-
 
 
 class FeatureViewer {
@@ -79,6 +79,16 @@ class FeatureViewer {
         }
 
         return res;
+    }
+
+    private flatten(features, flatted=[], parent=null) {
+        for (let i in features) {
+            let ft = features[i]
+            ft.parent = parent;
+            flatted.push(ft);
+            if (ft.subfeatures) { this.flatten(ft.subfeatures, flatted=flatted, parent=ft.parent+'_'+ft.id) }
+        }
+        return flatted
     }
 
     private parseUserOptions(options: UserOptions): void {
@@ -852,12 +862,14 @@ class FeatureViewer {
             .append("div")
             .attr("class", "fvtooltip")
             .attr("id", "fvtooltip")
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("z-index", 1070);
         this.commons.customTooltipDiv = d3.select(`#${this.divId}`)
             .append("div")
             .attr("class", "fvcustomtooltip")
             .attr("id", "fvcustomtooltip")
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("z-index", 1070);
 
         this.commons.style = d3.select(`#${this.divId}`)
             .append("style")
@@ -961,7 +973,7 @@ class FeatureViewer {
                     .attr("class", "mybuttoncircle")
                     .attr("id", "downloadButton")
                     .on("click", () => {
-                        this.downloadSVG()
+                        this.downloadJpeg()
                     })
                     // draw icon
                     .append("svg")
@@ -1174,29 +1186,23 @@ class FeatureViewer {
         alert(helpContent)
     }
 
-    public downloadSVG() {
+    public downloadJpeg() {
 
-        let filename = this.divId + "_feature_viewer.png";
-
-        // serialize our SVG XML to a string.
-        let svg_el = d3.select(`#${this.divId}`).select("#svgContent");
         //let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
-        // workaround: exclude tags container while serializing object, then append it again
-        // temporarily remove foreingobject area
-        // let tagarea = svg_el.select("#tags_container").remove();
-        let source = (new XMLSerializer()).serializeToString(<HTMLElement>svg_el.node());
-        // restore removed parts
-        // svg_el.node().append(tagarea.node());
+        let svg_el = document.getElementById(this.divId)
+        let filename = "feature_viewer.jpeg";
 
+        htmlToImage.toJpeg(svg_el, { quality: 0.95 })
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                link.click();
+            })
+            .catch(function (error) {
+                console.error('Error in Image download', error);
+            });
 
-        let svgBlob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
-        let svgUrl = URL.createObjectURL(svgBlob);
-        let downloadLink = document.createElement("a");
-        downloadLink.href = svgUrl;
-        downloadLink.download = filename;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
     }
 
     private recursiveClose (array) {
@@ -1336,6 +1342,59 @@ class FeatureViewer {
     public removeResizeListener() {
         window.removeEventListener("resize", this.updateWindow);
     };
+
+    public highlightRegion(region, featureid) {
+        let flatted = this.flatten(this.commons.features)
+        // features in viewer?
+        let feature = flatted.find(i => i.id === featureid);
+        if (feature) {
+            // find feature in the tree and all its parents
+            if (feature.parent) {
+                let parents = feature.parent.replace("null_", "").split("_")
+                for (let i in parents) {
+                    let ptftid = parents[i]
+                    // let parentft = flatted.find(i => i.id === ptftid)
+                    console.log(this.commons.yData)
+                    let parentft = this.commons.yData.find(i => i.id === ptftid)
+                    console.log(parentft)
+                    this.clickFlagFunction(parentft)
+                }
+            }
+            let regionid = "f_" + featureid + '_' + region.x + '-' + region.y;
+            this.tool.colorSelectedFeat(regionid, feature, this.commons.divId);
+        } else { this.commons.logger.warn("Selected feature id does not exist!") }
+    };
+
+    public highlightPosition(object) {
+        let start = this.commons.scaling(object.start)
+        let end = this.commons.scaling(object.end)
+        // remove selection rectangle if already there
+        let selectRect;
+        if (d3.select(`#${this.commons.divId}`).select(".selectionRect").node()) {
+            selectRect = d3.select(`#${this.commons.divId}`).select(".selectionRect")
+        } else {
+            // color the background
+            let currentContainer = this.commons.svgContainer.node().getBoundingClientRect();
+            // create
+            selectRect = this.commons.svgContainer
+                .select(".brush")
+                .append("rect")
+                .attr("class", "selectionRect box-shadow")
+                // add shadow?
+                .attr("height", currentContainer.height)
+            // place
+            selectRect
+                .style("display", "block") // remove display none
+                .attr("width", end-start) // - shift from the beginning
+                .attr("transform", () => {
+                    return "translate(" + start + ",0)"
+                })
+        }
+    }
+
+    // public highlightRegion(object) {
+    //
+    // }
 
     // edit: listener of selected flag
     /**

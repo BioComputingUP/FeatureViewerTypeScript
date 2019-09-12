@@ -9,9 +9,7 @@ import {event as currentEvent} from 'd3-selection';
 import * as _ from 'underscore';
 import htmlToImage from 'html-to-image';
 
-import {UserOptions} from './interfaces';
-import {FeaturesList, FeatureObject} from './interfaces';
-import {FeatureViewerLog} from './interfaces';
+import {FeaturesList, FeatureObject, UserOptions, FeatureViewerLog} from './interfaces';
 import Commons from './commons';
 import {Transition, SubfeaturesTransition} from "./transition";
 import FillSVG from "./fillsvg";
@@ -34,63 +32,6 @@ class FeatureViewer {
     private calculate: Calculate;
     private tool: Tool;
 
-    private searchTree(element, matchingId){
-        if (element.id == matchingId) {
-            return element;
-        } else if (element.subfeatures) {
-            var i;
-            var result = null;
-            for (i = 0; result == null && i < element.subfeatures.length; i++) {
-                result = this.searchTree(element.subfeatures[i], matchingId);
-            }
-            return result;
-        }
-        return null;
-    }
-
-    private unflatten = function( array: FeaturesList, parent=null, processedIds=null, tree=null ){
-
-        tree = tree !== null ? tree : [];
-        parent = parent !== null ? parent : { id: 0 };
-        processedIds = processedIds !== null ? processedIds : new Set();
-
-        var children = _.filter( array, (child) => {
-            if (child.parentId === undefined) {
-                child.parentId = 0
-            }
-            if (child.parentId === parent.id) {
-                processedIds.add(child.id)
-            }
-            return child.parentId == parent.id;
-        });
-
-        if( !_.isEmpty( children )  ){
-            if( parent.id == 0 ){
-                tree = children;
-            }else{
-                parent['subfeatures'] = children
-            }
-            _.each( children, ( child ) => { this.unflatten( array, child, processedIds ) } );
-        }
-
-        let res = {
-            tree:tree,
-            ids:processedIds
-        }
-
-        return res;
-    }
-
-    private flatten(features, flatted=[], parent=null) {
-        for (let i in features) {
-            let ft = features[i]
-            ft.parent = parent;
-            flatted.push(ft);
-            if (ft.subfeatures) { this.flatten(ft.subfeatures, flatted=flatted, parent=ft.parent+'_'+ft.id) }
-        }
-        return flatted
-    }
-
     private parseUserOptions(options: UserOptions): void {
 
         const simple_keys = [
@@ -103,9 +44,12 @@ class FeatureViewer {
             'showSubFeatures',
             'flagColor',
             'flagTrack',
+            'flagTrackMobile',
+            'breakpoint',
             'sideBar',
-            'animation'
+            'unit'
         ];
+        // and: breakpoint, offset
 
         for (let key of simple_keys) {
             if (options && key in options) {
@@ -114,7 +58,13 @@ class FeatureViewer {
         }
 
         if (options.breakpoint) {
-            this.commons.mobilesize = options.breakpoint;
+            if (typeof options.breakpoint === 'string') {
+                this.commons.mobilesize = Number(options.breakpoint);
+            } else if (typeof  options.breakpoint === 'number') {
+                this.commons.mobilesize = options.breakpoint;
+            } else if (typeof  options.breakpoint === 'boolean') {
+                this.commons.mobilesize = 951;
+            }
         }
 
         this.commons.viewerOptions.offset = {start: 0, end: this.commons.fvLength + 1};
@@ -124,16 +74,6 @@ class FeatureViewer {
                 this.commons.viewerOptions.offset.start = 1;
                 this.commons.logger.warn("Offset.start should be > 0. Thus, it has been reset to 1.", {fvId:this.divId});
             }
-        }
-
-        if (!options.unit) {
-            this.commons.viewerOptions.unit = "units";
-        } else {
-            this.commons.viewerOptions.unit = options.unit;
-        }
-
-        if (options.animation) {
-            this.commons.animation = options.animation;
         }
 
         if (!this.commons.viewerOptions.brushActive) {
@@ -168,13 +108,27 @@ class FeatureViewer {
             } else if (typeof  options.flagTrack === 'number') {
                 this.commons.viewerOptions.labelTrackWidth = options.flagTrack;
             } else if (typeof  options.flagTrack === 'boolean') {
-                this.commons.viewerOptions.labelTrackWidth = 200;
+                this.commons.viewerOptions.labelTrackWidth = options.flagTrack ? 200 : 0;
             } else {
                 this.commons.viewerOptions.labelTrackWidth = 200;
                 this.commons.logger.warn(`Automatically set tagsTrackWidth to ${this.commons.viewerOptions.tagsTrackWidth}`, {fvId:this.divId});
             }
         }
         this.commons.viewerOptions.backup.labelTrackWidth = this.commons.viewerOptions.labelTrackWidth;
+
+        this.commons.viewerOptions.labelTrackWidthMobile = 30;
+        if (options && options.flagTrackMobile) {
+            if (typeof options.flagTrackMobile === 'string') {
+                this.commons.viewerOptions.labelTrackWidthMobile = Number(options.flagTrackMobile.match(/[0-9]+/g)[0]);
+            } else if (typeof options.flagTrackMobile === 'number') {
+                this.commons.viewerOptions.labelTrackWidthMobile = options.flagTrackMobile;
+            } else if (typeof options.flagTrackMobile === 'boolean') {
+                this.commons.viewerOptions.labelTrackWidthMobile = options.flagTrackMobile ? 30 : 0;
+            } else {
+                this.commons.viewerOptions.labelTrackWidthMobile = 30;
+                this.commons.logger.warn(`Automatically set tagsTrackWidth to ${this.commons.viewerOptions.tagsTrackWidth}`, {fvId:this.divId});
+            }
+        }
 
         this.commons.viewerOptions.margin = {
             top: 10,
@@ -184,16 +138,14 @@ class FeatureViewer {
         };
 
         // resize if width < 480, initial view
-        // let totalwidth = d3.select(`#${this.divId}`).node().getBoundingClientRect().width;
         let myd3node = d3.select(`#${this.divId}`).node();
         let totalwidth = (<HTMLElement>myd3node).getBoundingClientRect().width;
-        // let totalwidth = d3.select(`#${this.divId}`).node().getBoundingClientRect().width;
         if (totalwidth < this.commons.mobilesize) {
             this.commons.viewerOptions.mobileMode = true;
-            this.commons.viewerOptions.margin.left = 40;
+            this.commons.viewerOptions.margin.left = this.commons.viewerOptions.labelTrackWidthMobile;
             if (this.commons.viewerOptions.tagsTrackWidth !== 0) {
                 this.commons.viewerOptions.margin.right = 80
-            };
+            }
         }
 
         // this.commons.viewerOptions.width = d3.select(`#${this.divId}`).node().getBoundingClientRect().width - this.commons.viewerOptions.margin.left - this.commons.viewerOptions.margin.right - 17;
@@ -203,31 +155,7 @@ class FeatureViewer {
 
     };
 
-    private displaySequence = function (seq) {
-        // checks if dotted sequence or letters
-        return this.commons.viewerOptions.width / seq > 5;
-    };
-
-    private addXAxis(position) {
-        this.commons.svgContainer.append("g")
-            .attr("class", "x axis XAxis")
-            .attr("transform", "translate(0," + (position + 20) + ")")
-            .call(this.commons.xAxis);
-        if (!this.commons.viewerOptions.showAxis) {
-            d3.select(`#${this.divId}`).selectAll(".tick")
-                .attr("display", "none")
-        }
-    };
-
-    private updateXAxis(position) {
-        this.commons.svgContainer.selectAll(".XAxis")
-            .attr("transform", "translate(0," + (position + this.commons.step) + ")");
-    };
-
-    private updateSVGHeight(position) {
-        this.commons.svg.attr("height", position + 60 + "px");
-        this.commons.svg.select("clipPath rect").attr("height", position + 60 + "px");
-    };
+    // Y Axis, responsive to click and triggers modifications in feature list
 
     private addYAxis() {
         // flags box
@@ -267,7 +195,7 @@ class FeatureViewer {
                 this.clickFlagFunction(d)
             })
             .call(this.commons.d3helper.flagTooltip());
-            //.call(d3.helper.genericTooltip({}));
+        //.call(d3.helper.genericTooltip({}));
 
         // create polygon
         this.commons.yAxisSVGGroup
@@ -279,8 +207,10 @@ class FeatureViewer {
             }) // colour the border if selected
             .attr("points", (d) => {
                 // match points with subFeature level
-                return this.calculate.yxPoints(d)
+                let polypoints = this.calculate.yxPoints(d)
+                return polypoints
             })
+            .attr("transform", d => "translate(" + (20 * (d.flagLevel - 1))  + ",0)")
             .style("fill", (d) => {
                 if (d.flagColor) return d.flagColor;
                 return this.commons.viewerOptions.flagColor // or flagColor
@@ -314,6 +244,7 @@ class FeatureViewer {
 
         this.commons.yAxisSVGGroup
             .append("foreignObject")
+            // text
             .attr("class", "yAxis")
             .style("display", (d) => {
                 // text only if space is enough
@@ -326,7 +257,7 @@ class FeatureViewer {
             .attr("x", (d) => {
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                    // chevron margin
+                    // chevron margin, placed rightly
                     cvm = 17
                 }
                 // horizontal flag placement
@@ -353,88 +284,11 @@ class FeatureViewer {
             })
             .attr("height", this.commons.step - 11)
             .html((d) => {
-                // text only if space is enough
                 return d.label;
             });
     };
 
-    private clickFlagFunction(d) {
-
-        // remove selected features
-        if (this.commons.featureSelected) {
-            d3.select(`#${this.divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
-            this.commons.featureSelected = null;
-        }
-        // remove selection rectangle
-        d3.select(`#${this.divId}`).select(".selectionRect").remove();
-
-        // empty custom tooltip
-        this.commons.customTooltipDiv.transition()
-            .duration(500)
-            .style("opacity", 0);
-        this.commons.customTooltipDiv.html("");
-
-        // dispatches selected flag event
-        let id = d.id;
-        let flag_detail_object = {
-            points: this.calculate.yxPoints(d),
-            y: d.y,
-            id: d.id,
-            label: d.label,
-            flagLevel: d.flagLevel
-        };
-        // trigger flag_selected event
-        if (CustomEvent) {
-
-            let eventDetail = {detail: flag_detail_object},
-                event = new CustomEvent(this.commons.events.FLAG_SELECTED_EVENT, eventDetail);
-            this.commons.svgElement.dispatchEvent(event);
-
-            if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                this.commons.flagSelected.push(flag_detail_object.id);
-
-                // let featureToChange = this.searchTree(this.commons.features, flag_detail_object.id)
-                var i;
-                var result = null;
-                for (i = 0; result == null && i < this.commons.features.length; i++) {
-                    result = this.searchTree(this.commons.features[i], flag_detail_object.id);
-                }
-                let featureToChange = result;
-                if (featureToChange) {
-                    this.changeFeature(featureToChange, !featureToChange.isOpen);
-                } else {
-                    this.commons.logger.warn("Feature not found in feature array", {fvId:this.divId, featureId:flag_detail_object.id})
-                }
-            }
-
-
-        } else {
-            this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
-        }
-
-        if (this.commons.trigger) this.commons.trigger(this.commons.events.FLAG_SELECTED_EVENT, flag_detail_object);
-    };
-
-    private resizeBrush() {
-
-        let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
-        let thisbrush = this.commons.svgContainer.select(".brush");
-        thisbrush.select("rect")
-            .attr('height', rectArea.height)
-            .attr('width', rectArea.width);
-    };
-
-    private addBrush() {
-
-        this.commons.svgContainer
-            .append("g")
-            .attr("class", "brush")
-            .attr("id", "fvbrush")
-            .call(this.commons.brush)
-        //.call(this.commons.brush.move, this.commons.scaling());
-        this.resizeBrush()
-
-    };
+    // Brush, defines responsive area
 
     private brushend() {
 
@@ -473,7 +327,7 @@ class FeatureViewer {
                     start = 0
                 }
                 let extentLength = end - start;
-                let seqCheck = this.displaySequence(extentLength);
+                let seqCheck = this.calculate.displaySequence(extentLength);
 
                 if (extentLength > this.commons.viewerOptions.zoomMax) {
 
@@ -496,7 +350,7 @@ class FeatureViewer {
 
                     // apply transitions
                     this.transition_data(this.commons.features, currentShift);
-                    this.reset_axis();
+                    this.fillSVG.reset_axis();
 
                     // remove sequence
                     this.commons.svgContainer.select(".mySequence").remove();
@@ -547,6 +401,8 @@ class FeatureViewer {
 
     }
 
+    // Mobile responsiveness
+
     private resizeForMobile() {
         // change flags
         let flags = d3.select(`#${this.divId}`).selectAll(".Arrow")
@@ -580,30 +436,23 @@ class FeatureViewer {
         if (totalwidth < this.commons.mobilesize) {
             if (!this.commons.viewerOptions.mobileMode) {
                 this.commons.viewerOptions.mobileMode = true;
-                this.commons.viewerOptions.margin.left = 40;
+                // update margins according to flagBackground width
                 if (this.commons.viewerOptions.tagsTrackWidth !== 0) {
                     this.commons.viewerOptions.margin.right = 80
                 };
-                // resize for mobile
-                this.resizeForMobile();
-            }
-        }
-        else if (this.commons.viewerOptions.mobileMode) {
+                this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft() - (this.commons.viewerOptions.labelTrackWidth - this.commons.viewerOptions.labelTrackWidthMobile)
+            } else {this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft();}
+        } else {
+            if (this.commons.viewerOptions.mobileMode) {
+                // no mobile size, resize flags
                 this.commons.viewerOptions.mobileMode = false;
-                this.commons.viewerOptions.margin.left = this.commons.viewerOptions.labelTrackWidth;
-                this.commons.viewerOptions.margin.right = this.commons.viewerOptions.tagsTrackWidth;
-                // resize back to options
-                this.resizeForMobile()
+                this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft() + (this.commons.viewerOptions.labelTrackWidth - this.commons.viewerOptions.labelTrackWidthMobile)
+            } else {this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft();}
         }
-        else {
-            // no mobile size, resize flags
-            // change flags
-            let flags = d3.select(`#${this.divId}`).selectAll(".Arrow")
-                .attr("points", (d) => {
-                    // match points with subFeature level
-                    return this.calculate.yxPoints(d)
-                });
-        }
+        // update margins according to flagBackground width
+        // resize for mobile
+        console.log("resize for mobile?", totalwidth < this.commons.mobilesize, this.commons.viewerOptions.margin.left)
+        this.resizeForMobile()
 
         this.commons.viewerOptions.width = totalwidth - this.commons.viewerOptions.margin.left - this.commons.viewerOptions.margin.right - 17;
 
@@ -624,7 +473,7 @@ class FeatureViewer {
         this.commons.scalingPosition.domain([0, this.commons.viewerOptions.width]);
 
         // update seq visualization
-        let seq = this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
+        let seq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
         this.commons.svgContainer.select(".mySequence").remove();
         if (this.commons.viewerOptions.showSequence) {
             if (seq === false) {
@@ -645,78 +494,9 @@ class FeatureViewer {
 
 
         this.transition_data(this.commons.features, this.commons.current_extend.start);
-        this.reset_axis();
-        this.resizeBrush()
+        this.fillSVG.reset_axis();
+        this.fillSVG.resizeBrush()
 
-    }
-
-    public resetAll() {
-
-        // empty custom tooltip in reset
-        this.commons.customTooltipDiv.transition()
-            .duration(500)
-            .style("opacity", 0);
-        this.commons.customTooltipDiv.html("");
-
-        // remove selected features
-        if (this.commons.featureSelected) {
-            d3.select(`#${this.divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
-            this.commons.featureSelected = null;
-        }
-        // remove selection rectangle
-        d3.select(`#${this.divId}`).select(".selectionRect").remove();
-
-        //reset scale
-        d3.select(`#${this.divId}`).select(".zoomUnit").text("1");
-        this.commons.scaling.domain([this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end]);
-        this.commons.scalingPosition.range([this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end]);
-        let seq = this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
-
-        d3.select(`#${this.divId}`).select(".fvbrush").call(this.commons.brush.move, null);
-
-        // remove sequence
-        this.commons.svgContainer.select(".mySequence").remove();
-        // draw sequence
-        if (this.commons.viewerOptions.showSequence) {
-            if (seq === false) {
-                this.fillSVG.sequenceLine();
-            }
-            else if (seq === true) {
-                this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
-            }
-        }
-
-        this.commons.customTooltipDiv.transition()
-            .duration(500)
-            .style("opacity", 0);
-        this.commons.customTooltipDiv.html("");
-        this.commons.customTooltipDiv.status == 'closed';
-
-        this.commons.current_extend = {
-            length: this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start,
-            start: this.commons.viewerOptions.offset.start,
-            end: this.commons.viewerOptions.offset.end
-        };
-        this.commons.seqShift = 0;
-
-        this.transition_data(this.commons.features, this.commons.viewerOptions.offset.start);
-        this.reset_axis();
-
-        // Fire Event
-        if (CustomEvent) {
-            this.commons.svgElement.dispatchEvent(new CustomEvent(this.commons.events.ZOOM_EVENT, {
-                detail: {
-                    start: 1,
-                    end: this.sequence.length-1,
-                    zoom: 1
-                }
-            }));
-        }
-        if (this.commons.trigger) this.commons.trigger(this.commons.events.ZOOM_EVENT, {
-            start: 1,
-            end: this.sequence.length-1,
-            zoom: 1
-        });
     }
 
     private transition_data(features, start) {
@@ -745,14 +525,7 @@ class FeatureViewer {
         };
     }
 
-    private reset_axis() {
-        if (this.commons.animation) {
-            this.commons.svgContainer.transition().duration(500);
-        }
-        this.commons.svgContainer
-            .select(".x.axis")
-            .call(this.commons.xAxis);
-    }
+    // init viewer
 
     private init(div) {
 
@@ -987,7 +760,7 @@ class FeatureViewer {
                     .attr("id", "helpButton")
                     .attr("class", "mybuttoncircle")
                     .on("click", () => {
-                        this.showHelp()
+                        this.fillSVG.showHelp()
                     })
                     // draw icon
                     .append("svg")
@@ -1074,7 +847,7 @@ class FeatureViewer {
         });
 
         if (this.commons.viewerOptions.showSequence) {
-            if (this.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
+            if (this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
             else {
@@ -1107,12 +880,12 @@ class FeatureViewer {
             });
         }
 
-        this.addXAxis(this.commons.YPosition);
+        this.fillSVG.addXAxis(this.commons.YPosition);
         this.addYAxis();
 
         if (this.commons.viewerOptions.brushActive) {
             // this.commons.viewerOptions.brushActive = true;
-            this.addBrush();
+            this.fillSVG.addBrush();
         }
         /* feature removed
         if (this.commons.viewerOptions.verticalLine) {
@@ -1121,7 +894,7 @@ class FeatureViewer {
         }
         */
 
-        this.updateSVGHeight(this.commons.YPosition);
+        this.calculate.updateSVGHeight(this.commons.YPosition);
 
         // listen to resizing
         window.addEventListener("resize", () => {
@@ -1129,6 +902,8 @@ class FeatureViewer {
         }); // window.addEventListener works, but iupdateWindow needs to access to internal commons
 
     }
+
+    // interact with features
 
     private addFeatureCore(object, flagLevel = 1, position = null) {
 
@@ -1175,34 +950,38 @@ class FeatureViewer {
 
     }
 
-    private showHelp() {
+    private drawFeatures() {
 
-        /*let helpContent = "<div><strong>To zoom in :</strong> Left click to select area of interest</div>" +
-            "<div><strong>To zoom out :</strong> Right click to reset the scale</div>" +
-            "<div><strong>Zoom max  :</strong> Limited to <strong>" + this.commons.zoomMax.toString() + " " + this.commons.viewerOptions.unit + "</strong></div>";*/
-        let helpContent = "To zoom in : Left click to select area of interest\n To zoom out : Right click to reset the scale\n Zoom max : Limited to" +
-            this.commons.viewerOptions.zoomMax.toString() + " " + this.commons.viewerOptions.unit
+        // turn off features if more than 100
+        if (this.commons.features.length > 100) {
+            this.commons.animation = false;
+            this.commons.logger.warn("Animation is turned off with more than 100 features", {method:"addFeatureCore", fvId:this.divId, featuresNumber:this.commons.features.length})
+        }
+        for (const ft of this.commons.features) {
+            this.addFeature(ft)
+        };
 
-        alert(helpContent)
+        this.fillSVG.updateXAxis(this.commons.YPosition);
+        this.calculate.updateSVGHeight(this.commons.YPosition);
+
+        // update brush
+        if (this.commons.viewerOptions.brushActive) {
+            this.fillSVG.resizeBrush()
+        }
+
     }
 
-    public downloadJpeg() {
-
-        //let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
-        let svg_el = document.getElementById(this.divId)
-        let filename = "feature_viewer.jpeg";
-
-        htmlToImage.toJpeg(svg_el, { quality: 0.95 })
-            .then(function (dataUrl) {
-                var link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                link.click();
-            })
-            .catch(function (error) {
-                console.error('Error in Image download', error);
-            });
-
+    private recursivelyRemove(ft) {
+        // remove subfeatures
+        if (ft.subfeatures) {
+            for (const sft of ft.subfeatures) {
+                this.recursivelyRemove(sft)
+            }
+        }
+        // remove from feature array and from html
+        d3.select(`#t${ft.id}_tagarea`).remove();
+        d3.select(`#c${ft.id}_container`).remove();
+        d3.select(`#${ft.id}`).remove();
     }
 
     private recursiveClose (array) {
@@ -1252,42 +1031,162 @@ class FeatureViewer {
 
     }
 
-    private drawFeatures() {
-
-        // turn off features if more than 100
-        if (this.commons.features.length > 100) {
-            this.commons.animation = false;
-            this.commons.logger.warn("Animation is turned off with more than 100 features", {method:"addFeatureCore", fvId:this.divId, featuresNumber:this.commons.features.length})
-        }
-        for (const ft of this.commons.features) {
-            this.addFeature(ft)
-        };
-
-        this.updateXAxis(this.commons.YPosition);
-        this.updateSVGHeight(this.commons.YPosition);
-
-        // update brush
-        if (this.commons.viewerOptions.brushActive) {
-            this.resizeBrush()
-        }
-
-    }
-
-    private recursivelyRemove(ft) {
-        // remove subfeatures
-        if (ft.subfeatures) {
-            for (const sft of ft.subfeatures) {
-                this.recursivelyRemove(sft)
-            }
-        }
-        // remove from feature array and from html
-        d3.select(`#t${ft.id}_tagarea`).remove();
-        d3.select(`#c${ft.id}_container`).remove();
-        d3.select(`#${ft.id}`).remove();
-    }
-
 
     /*** PUBLIC FUNCTIONS ***/
+
+    public resetAll() {
+
+        // empty custom tooltip in reset
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+
+        // remove selected features
+        if (this.commons.featureSelected) {
+            d3.select(`#${this.divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
+            this.commons.featureSelected = null;
+        }
+        // remove selection rectangle
+        d3.select(`#${this.divId}`).select(".selectionRect").remove();
+
+        //reset scale
+        d3.select(`#${this.divId}`).select(".zoomUnit").text("1");
+        this.commons.scaling.domain([this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end]);
+        this.commons.scalingPosition.range([this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end]);
+        let seq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
+
+        d3.select(`#${this.divId}`).select(".fvbrush").call(this.commons.brush.move, null);
+
+        // remove sequence
+        this.commons.svgContainer.select(".mySequence").remove();
+        // draw sequence
+        if (this.commons.viewerOptions.showSequence) {
+            if (seq === false) {
+                this.fillSVG.sequenceLine();
+            }
+            else if (seq === true) {
+                this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
+            }
+        }
+
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+        this.commons.customTooltipDiv.status == 'closed';
+
+        this.commons.current_extend = {
+            length: this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start,
+            start: this.commons.viewerOptions.offset.start,
+            end: this.commons.viewerOptions.offset.end
+        };
+        this.commons.seqShift = 0;
+
+        this.transition_data(this.commons.features, this.commons.viewerOptions.offset.start);
+        this.fillSVG.reset_axis();
+
+        // Fire Event
+        if (CustomEvent) {
+            this.commons.svgElement.dispatchEvent(new CustomEvent(this.commons.events.ZOOM_EVENT, {
+                detail: {
+                    start: 1,
+                    end: this.sequence.length-1,
+                    zoom: 1
+                }
+            }));
+        }
+        if (this.commons.trigger) this.commons.trigger(this.commons.events.ZOOM_EVENT, {
+            start: 1,
+            end: this.sequence.length-1,
+            zoom: 1
+        });
+    }
+
+    public downloadJpeg() {
+
+        //let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
+        let svg_el = document.getElementById(this.divId)
+        let filename = "feature_viewer.jpeg";
+
+        htmlToImage.toJpeg(svg_el, {quality: 0.95})
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                link.click();
+            })
+            .catch(function (error) {
+                console.error('Error in Image download', error);
+            });
+
+    }
+
+    public clickFlagFunction(d) {
+
+        // remove selected features
+        if (this.commons.featureSelected) {
+            d3.select(`#${this.commons.divId}`).select(`#${this.commons.featureSelected}`).style("fill-opacity", "0.6");
+            this.commons.featureSelected = null;
+        }
+        // remove selection rectangle
+        d3.select(`#${this.commons.divId}`).select(".selectionRect").remove();
+
+        // empty custom tooltip
+        this.commons.customTooltipDiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        this.commons.customTooltipDiv.html("");
+
+        // dispatches selected flag event
+        let id = d.id;
+        let flag_detail_object = {
+            points: this.calculate.yxPoints(d),
+            y: d.y,
+            id: d.id,
+            label: d.label,
+            flagLevel: d.flagLevel
+        };
+        // trigger flag_selected event
+        if (CustomEvent) {
+
+            let eventDetail = {detail: flag_detail_object},
+                event = new CustomEvent(this.commons.events.FLAG_SELECTED_EVENT, eventDetail);
+            this.commons.svgElement.dispatchEvent(event);
+
+            if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                this.commons.flagSelected.push(flag_detail_object.id);
+
+                // transition to open if closed and viceversa
+                // add offset to margin
+                // update flagBackground width
+                let width = d.isOpen? this.commons.viewerOptions.labelTrackWidth + (20 * d.flagLevel) - 20 : this.commons.viewerOptions.labelTrackWidth + (20 * d.flagLevel);
+                if (this.commons.viewerOptions.mobileMode) {
+                    width = d.isOpen? this.commons.viewerOptions.labelTrackWidthMobile + (20 * d.flagLevel) - 20 : this.commons.viewerOptions.labelTrackWidthMobile + (20 * d.flagLevel);
+                }
+                this.commons.yAxisSVG.select(".flagBackground").attr("width", width);
+                this.updateWindow()
+
+                var i;
+                var result = null;
+                for (i = 0; result == null && i < this.commons.features.length; i++) {
+                    result = this.calculate.searchTree(this.commons.features[i], flag_detail_object.id);
+                }
+                let featureToChange = result;
+                if (featureToChange) {
+                    this.changeFeature(featureToChange, !featureToChange.isOpen);
+                } else {
+                    this.commons.logger.warn("Feature not found in feature array", {fvId:this.commons.divId, featureId:flag_detail_object.id})
+                }
+            }
+
+
+        } else {
+            this.commons.logger.warn("CustomEvent is not defined", {fvId:this.commons.divId});
+        }
+
+        if (this.commons.trigger) this.commons.trigger(this.commons.events.FLAG_SELECTED_EVENT, flag_detail_object);
+    };
 
     public emptyFeatures() {
 
@@ -1311,7 +1210,7 @@ class FeatureViewer {
         this.commons.yData = this.commons.yData.filter(checkSequence);
 
         // fix axis
-        this.updateXAxis(this.commons.step)
+        this.fillSVG.updateXAxis(this.commons.step)
 
         // transit svgContent
         let container = d3.select(`#${this.divId} #svgContent`);
@@ -1330,6 +1229,11 @@ class FeatureViewer {
 
     }
 
+    public flagLoading(id) {
+        this.commons.logger.debug("Loading subfeatures", {method:'addFeatures',fvId:this.commons.divId})
+        d3.select(`#${this.commons.divId}`).select("#fvoverlay").attr("class", "pageoverlay")
+    };
+
     /**
      * @function
      * @methodOf FeatureViewer
@@ -1344,7 +1248,7 @@ class FeatureViewer {
     };
 
     public highlightRegion(region, featureid) {
-        let flatted = this.flatten(this.commons.features)
+        let flatted = this.calculate.flatten(this.commons.features)
         // features in viewer?
         let feature = flatted.find(i => i.id === featureid);
         if (feature) {
@@ -1391,10 +1295,6 @@ class FeatureViewer {
                 })
         }
     }
-
-    // public highlightRegion(object) {
-    //
-    // }
 
     // edit: listener of selected flag
     /**
@@ -1448,11 +1348,6 @@ class FeatureViewer {
     public stopFlagLoading = function (id) {
         this.commons.logger.debug("Finished loading subfeatures", {method:'addFeatures',fvId:this.divId})
         d3.select(`#${this.divId}`).select("#fvoverlay").attr("class", null)
-    };
-
-    public flagLoading(id) {
-        this.commons.logger.debug("Loading subfeatures", {method:'addFeatures',fvId:this.divId})
-        d3.select(`#${this.divId}`).select("#fvoverlay").attr("class", "pageoverlay")
     };
 
     // function to call resize from external
@@ -1542,7 +1437,7 @@ class FeatureViewer {
                 // add to viewer
 
                 // features already in viewer?
-                let unflatted = this.unflatten(
+                let unflatted = this.calculate.unflatten(
                     featureList,
                     null,
                     null,

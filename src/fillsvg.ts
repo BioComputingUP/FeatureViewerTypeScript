@@ -2,6 +2,7 @@ import ComputingFunctions from "./helper";
 import Calculate from "./calculate";
 
 import * as d3 from './custom-d3';
+import {event as currentEvent} from "d3-selection";
 
 class PreComputing {
 
@@ -121,6 +122,7 @@ class PreComputing {
 class FillSVG extends ComputingFunctions {
 
     private preComputing: PreComputing;
+    private calculate: Calculate;
     private storeData;
 
     private sbcRip(d, i, r) {
@@ -921,6 +923,70 @@ class FillSVG extends ComputingFunctions {
 
         this.forcePropagation(rects);
     }
+
+    // AXIS FUNCTIONS
+
+    public reset_axis() {
+        if (this.commons.animation) {
+            this.commons.svgContainer.transition().duration(500);
+        }
+        this.commons.svgContainer
+            .select(".x.axis")
+            .call(this.commons.xAxis);
+    }
+
+    public addXAxis(position) {
+        this.commons.svgContainer.append("g")
+            .attr("class", "x axis XAxis")
+            .attr("transform", "translate(0," + (position + 20) + ")")
+            .call(this.commons.xAxis);
+        if (!this.commons.viewerOptions.showAxis) {
+            d3.select(`#${this.commons.divId}`).selectAll(".tick")
+                .attr("display", "none")
+        }
+    };
+
+    public updateXAxis(position) {
+        this.commons.svgContainer.selectAll(".XAxis")
+            .attr("transform", "translate(0," + (position + this.commons.step) + ")");
+    };
+
+    // BRUSH FUNCTION
+
+    public resizeBrush() {
+
+        let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
+        let thisbrush = this.commons.svgContainer.select(".brush");
+        thisbrush.select("rect")
+            .attr('height', rectArea.height)
+            .attr('width', rectArea.width);
+    };
+
+    public addBrush() {
+
+        this.commons.svgContainer
+            .append("g")
+            .attr("class", "brush")
+            .attr("id", "fvbrush")
+            .call(this.commons.brush)
+        //.call(this.commons.brush.move, this.commons.scaling());
+        this.resizeBrush()
+
+    };
+
+    // TOOLBAR ON TOP
+
+    public showHelp() {
+
+        /*let helpContent = "<div><strong>To zoom in :</strong> Left click to select area of interest</div>" +
+            "<div><strong>To zoom out :</strong> Right click to reset the scale</div>" +
+            "<div><strong>Zoom max  :</strong> Limited to <strong>" + this.commons.zoomMax.toString() + " " + this.commons.viewerOptions.unit + "</strong></div>";*/
+        let helpContent = "To zoom in : Left click to select area of interest\n To zoom out : Right click to reset the scale\n Zoom max : Limited to" +
+            this.commons.viewerOptions.zoomMax.toString() + " " + this.commons.viewerOptions.unit
+
+        alert(helpContent)
+    }
+
 
     constructor(commons: {}) {
         super(commons);

@@ -14,6 +14,7 @@ export interface UserOptions {
     showSubFeatures?: boolean,
     flagColor?: string,
     flagTrack?: number | string | boolean,
+    flagTrackMobile?: number | string | boolean,
     sideBar?: number | string | boolean,
     animation?: boolean,
     unit?: string
@@ -34,6 +35,7 @@ export interface ViewerOptions {
     showSubFeatures: boolean,
     sideBar: boolean,
     labelTrackWidth: number,
+    labelTrackWidthMobile: number,
     tagsTrackWidth: number,
     margin: {
         top: number,

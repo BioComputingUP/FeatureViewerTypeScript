@@ -26,6 +26,7 @@ class Commons {
         showSubFeatures: true,
         sideBar: true,
         labelTrackWidth: 0,
+        labelTrackWidthMobile: 0,
         tagsTrackWidth: 0,
         mobileMode: false,
         margin: {

@@ -37,7 +37,8 @@ class Commons {
         },
         backup: {
             labelTrackWidth: 0,
-            tagsTrackWidth: 0
+            tagsTrackWidth: 0,
+            features: []
         },
         width: null,
         height: null,
@@ -91,6 +92,7 @@ class Commons {
     public d3helper: any={};
     public style: any;
     public logger: any;
+    public backgroundcolor: string;
 
     private _current_extend = null;
 

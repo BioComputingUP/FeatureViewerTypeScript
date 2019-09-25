@@ -140,10 +140,14 @@ class Calculate {
 
     public flatten(features, flatted=[], parent=null) {
         for (let i in features) {
-            let ft = features[i]
-            ft.parent = parent;
+            let ft = features[i];
+            if (!parent) { ft.parent = []; } else {
+                if (ft.parent) {ft.parent.concat(parent)} else {ft.parent = parent}
+            }
             flatted.push(ft);
-            if (ft.subfeatures) { this.flatten(ft.subfeatures, flatted=flatted, parent=ft.parent+'_'+ft.id) }
+            if (ft.subfeatures) {
+                this.flatten(ft.subfeatures, flatted=flatted, parent=ft.parent.concat(ft.id))
+            }
         }
         return flatted
     }

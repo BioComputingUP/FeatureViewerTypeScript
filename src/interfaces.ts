@@ -17,7 +17,8 @@ export interface UserOptions {
     flagTrackMobile?: number | string | boolean,
     sideBar?: number | string | boolean,
     animation?: boolean,
-    unit?: string
+    unit?: string,
+    backgroundcolor?: string
 }
 
 export interface ViewerOptions {
@@ -45,7 +46,8 @@ export interface ViewerOptions {
     },
     backup: {
         labelTrackWidth: number,
-        tagsTrackWidth: number
+        tagsTrackWidth: number,
+        features: any
     },
     width: number,
     height: number,

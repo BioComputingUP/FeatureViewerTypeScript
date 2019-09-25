@@ -955,11 +955,13 @@ class FillSVG extends ComputingFunctions {
 
     public resizeBrush() {
 
-        let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
-        let thisbrush = this.commons.svgContainer.select(".brush");
-        thisbrush.select("rect")
-            .attr('height', rectArea.height)
-            .attr('width', rectArea.width);
+        if (this.commons.svgContainer) {
+            let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
+            let thisbrush = this.commons.svgContainer.select(".brush");
+            thisbrush.select("rect")
+                .attr('height', rectArea.height)
+                .attr('width', rectArea.width);
+        }
     };
 
     public addBrush() {

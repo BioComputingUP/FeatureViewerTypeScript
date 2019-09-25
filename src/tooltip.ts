@@ -188,10 +188,14 @@ class Tool extends Calculate {
                 selection
                 // tooltip
                     .on('mouseover.tooltip', (pD) => {
-                        drawMyTooltip(pD);
+                        if (this.commons.viewerOptions.mobileMode) {
+                            drawMyTooltip(pD);
+                        }
                     })
                     .on('mousemove.tooltip', (pD) => {
-                        drawMyTooltip(pD);
+                        if (this.commons.viewerOptions.mobileMode) {
+                            drawMyTooltip(pD);
+                        }
                     })
                     .on('mouseout.tooltip', () => {
                         // Remove tooltip

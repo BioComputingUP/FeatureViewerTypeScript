@@ -1351,6 +1351,35 @@ class FeatureViewer {
         }
     }
 
+    private recursiveClick(f, condition) {
+        if (f.isOpen === condition) {
+            this.clickFlag(this.commons.yData.find(i => i.id === f.id))
+            if (f.subfeatures) {
+                for (let i in f.subfeatures) {
+                    let sf = f.subfeatures[i];
+                    if (sf.isOpen === condition) {
+                        // this.clickFlag(this.commons.yData.find(i => i.id === sf.id))
+                        this.recursiveClick(sf, condition)
+                    }
+                }
+            }
+        }
+    }
+
+    public collapseAll() {
+        for (let i in this.commons.features) {
+            let f = this.commons.features[i];
+            this.recursiveClick(f, true)
+        }
+    }
+
+    public expandAll() {
+        for (let i in this.commons.features) {
+            let f = this.commons.features[i];
+            this.recursiveClick(f, false)
+        }
+    }
+
     /**
      * @function
      * @methodOf FeatureViewer

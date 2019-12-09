@@ -3,6 +3,10 @@
 This is a code repository for the BioComputingUP Feature Viewer project.
 Full documentation at: http://protein.bio.unipd.it/feature-viewer.
 
+This project is based on the Javascript version [calipho-sib/feature-viewer](github.com/calipho-sib/feature-viewer), 
+Copyright (c) 2015, SIB Swiss Institute of Bioinformatics. This version is <b>Typescript-based</b> 
+and compatible with <b>Angular 2+</b>.
+
 Represent biological data with the feature viewer library! Used in [MobiDB](http://mobidb.bio.unipd.it/), 
 [DisProt](http://www.disprot.org/), [RepeatsDB](http://repeatsdb.bio.unipd.it/) and 
 [PhytotypeDB](http://phytotypedb.bio.unipd.it/).
@@ -15,17 +19,17 @@ npm install feature-viewer-typescript
 ```
 
 2. Import the feature viewer in javascript or your angular component
-```
+```typescript
 import {FeatureViewer} from 'feature-viewer-typescript/lib';
 ```
 
 2. Place the feature viewer in your html
-```
+```html
 <div id="myfv"></div>
 ```
 
 3. Create an instance of the feature viewer in javascript and style it
-```
+```typescript
 var proteinsequence = 'MTKFTILLISLLFCIAHTCSASKWQHQQDSCRKQLQGVNLTPCEKHIMEKIQGRGDDDDDDDDDNHILRTMRGRINYIRRNEGKDEDEE'
 var fv = new FeatureViewer(proteinsequence, '#myfv', {
                showAxis: true,
@@ -38,7 +42,7 @@ var fv = new FeatureViewer(proteinsequence, '#myfv', {
 ```
 
 4. Add features and subfeatures
-```
+```typescript
 fv.addFeatures(
     [
         { // simple rect

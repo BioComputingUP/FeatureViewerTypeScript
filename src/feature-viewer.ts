@@ -449,6 +449,8 @@ class FeatureViewer {
     private updateWindow() {
 
         // change width now
+        if (d3.select(`#${this.divId}`).node() !== null) {
+
         // let totalwidth = d3.select(`#${this.divId}`).node().getBoundingClientRect().width;
         let myd3node = d3.select(`#${this.commons.divId}`).node();
         let totalwidth = (<HTMLElement>myd3node).getBoundingClientRect().width;
@@ -460,9 +462,12 @@ class FeatureViewer {
                 // update margins according to flagBackground width
                 if (this.commons.viewerOptions.tagsTrackWidth !== 0) {
                     this.commons.viewerOptions.margin.right = 80
-                };
+                }
+                ;
                 this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft() - (this.commons.viewerOptions.labelTrackWidth - this.commons.viewerOptions.labelTrackWidthMobile)
-            } else {this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft();}
+            } else {
+                this.commons.viewerOptions.margin.left = this.calculate.getMarginLeft();
+            }
         } else {
             let margins = this.calculate.getMarginLeft();
             if (this.commons.viewerOptions.mobileMode) {
@@ -500,8 +505,7 @@ class FeatureViewer {
         if (this.commons.viewerOptions.showSequence) {
             if (seq === false) {
                 this.fillSVG.sequenceLine();
-            }
-            else if (seq === true) {
+            } else if (seq === true) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
         }
@@ -519,6 +523,7 @@ class FeatureViewer {
         this.fillSVG.reset_axis();
         this.fillSVG.resizeBrush()
 
+        }
     }
 
     private transition_data(features, start) {
@@ -943,7 +948,9 @@ class FeatureViewer {
         if (this.commons.animation) {
             if (CustomEvent) {
                 let event = new CustomEvent(this.commons.events.ANIMATIONS_FALSE_EVENT, {detail: {}});
-                this.commons.svgElement.dispatchEvent(event);
+                if (this.commons.svgElement) {
+                    this.commons.svgElement.dispatchEvent(event);
+                }
             } else {
                 this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
             }

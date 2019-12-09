@@ -201,7 +201,8 @@ class FillSVG extends ComputingFunctions {
             this.preComputing.multipleRect(object);
             this.rectangle(object, this.commons.YPosition);
 
-        } else if (object.type === "text") {
+        }
+        else if (object.type === "text") {
 
             this.commons.scaling.range([5, this.commons.viewerOptions.width - 5]);
             let seq = this.displaySequence(this.commons.current_extend.length);
@@ -213,23 +214,27 @@ class FillSVG extends ComputingFunctions {
             }
             //fillSVG.sequence(object.data, YPosition);
 
-        } else if (object.type === "unique") {
+        }
+        else if (object.type === "unique") {
 
             this.unique(object, this.commons.YPosition);
             this.commons.YPosition += 5;
 
-        } else if (object.type === "circle") {
+        }
+        else if (object.type === "circle") {
 
             this.circle(object, this.commons.YPosition);
             this.commons.YPosition += 5;
 
-        } else if (object.type === "multipleRect") {
+        }
+        else if (object.type === "multipleRect") {
 
             this.preComputing.multipleRect(object);
             this.multipleRect(object, this.commons.YPosition, this.commons.level);
             this.commons.YPosition += (this.commons.level - 1) * 10;
 
-        } else if (object.type === "path") {
+        }
+        else if (object.type === "path") {
 
             // this type of object overwrites object data, after fillSVG go back to original
             this.storeData = object.data;
@@ -238,7 +243,8 @@ class FillSVG extends ComputingFunctions {
             object.data = this.storeData;
             this.commons.YPosition += this.commons.pathLevel;
 
-        } else if (object.type === "curve") {
+        }
+        else if (object.type === "curve") {
 
             // this type of object overwrites object data, after fillSVG go back to original
             this.storeData = object.data;
@@ -257,6 +263,9 @@ class FillSVG extends ComputingFunctions {
             this.commons.YPosition += object.pathLevel;
             this.commons.YPosition += negativeNumbers ? object.pathLevel - 5 : 0;
 
+        }
+        else if (object.type === "lollipop") {
+            this.lollipop(object, this.commons.YPosition);
         }
     }
 
@@ -597,7 +606,7 @@ class FillSVG extends ComputingFunctions {
             .style("stroke", object.color)
             .style("stroke-width", "1px");
 
-        let readyData = [...object.data, ...object.data];
+        let readyData = [...object.data];
 
         rectsPro.selectAll("." + object.className + 'Unique')
             .data(readyData)
@@ -623,6 +632,111 @@ class FillSVG extends ComputingFunctions {
             .call(this.commons.d3helper.tooltip(object));
 
         this.forcePropagation(rectsPro);
+    }
+
+    public lollipop(object, position) {
+        let circlesPro = this.commons.svgContainer.append("g")
+            .attr("class", "pointPosition featureLine")
+            .attr("transform", "translate(0," + position + ")")
+            .attr("id", () => {
+                // random string
+                // return divId + '_' + d.title.split(" ").join("_") + '_g'
+                return 'c' + object.id + '_container'
+            });
+
+        let dataLine = [];
+        dataLine.push([{
+            x: 1,
+            y: 0
+        }, {
+            x: this.commons.fvLength,
+            y: 0
+        }]);
+
+        // basal line
+        circlesPro.selectAll(".line " + object.className)
+            .data(dataLine)
+            .enter()
+            .append("path")
+            .attr("d", this.commons.line)
+            .attr("class", "line " + object.className)
+            .style("z-index", "0")
+            .style("stroke", object.color)
+            .style("stroke-width", "1px");
+
+        let readyData = [...object.data];
+
+        // lollipop base
+        circlesPro.selectAll("." + object.className + 'Lollipop')
+            .data(readyData)
+            .enter()
+            .append("line")
+            .attr("x1", (d) => {return this.commons.scaling(d.x)})
+            .attr("x2", (d) => {return this.commons.scaling(d.x)})
+            .attr("y2", (d) => {
+                let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
+                if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
+                return w + 4;
+            })
+            .attr("y1", -8)
+            .style("stroke", (d) => {
+                return d.color || object.color
+            })
+            .style("stroke-width", 1)
+
+        // lollipop head
+        circlesPro.selectAll("." + object.className + 'Lollipop')
+            .data(readyData)
+            .enter()
+            .append("circle")
+            //.attr("clip-path", "url(#clip)")
+            .attr("class", "element " + object.className)
+            .attr("id", (d) => {
+                return "f_" + object.id;
+            })
+            // circle dimensions
+            .attr("cx", (d) => {
+                return this.commons.scaling(d.x)
+            })
+            .attr("cy", "-8") // same as height
+            // circle radius
+            .attr("r", (d) => {
+                if (d.y<=1) {
+                    return d.y*this.commons.elementHeight*0.5
+                } else {
+                    this.commons.logger.warn("Maximum circle radius is 1", {method:'addFeatures',fvId:this.commons.divId,featureId:object.id})
+                    return this.commons.elementHeight*0.5
+                }
+            })
+            .attr("width", (d) => {
+                let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
+                if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
+                return w;
+            })
+            .style("fill", (d) => {
+                return d.color || object.color
+            })
+            .style("fill-opacity", (d) => {
+                if (d.opacity) {
+                    return d.opacity
+                } else if (object.opacity) {
+                    return object.opacity
+                } else {
+                    return "1"
+                }
+            })
+            .style("stroke", (d) => {
+                if ("stroke" in d) {
+                    return d.stroke
+                } else if ("stroke" in object) {
+                    return object.stroke
+                } else {
+                    return d.color
+                }
+            })
+            .call(this.commons.d3helper.tooltip(object));
+
+        this.forcePropagation(circlesPro);
     }
 
     public circle(object, position) {
@@ -655,7 +769,7 @@ class FillSVG extends ComputingFunctions {
             .style("stroke", object.color)
             .style("stroke-width", "1px");
 
-        let readyData = [...object.data, ...object.data];
+        let readyData = [...object.data];
 
         circlesPro.selectAll("." + object.className + 'Circle')
             .data(readyData)
@@ -827,41 +941,6 @@ class FillSVG extends ComputingFunctions {
 
         });
 
-        //object.height = undefined;
-
-        // for tooltips
-        /*let toolContainer = histoG
-            .append("g")
-            .attr("class", "tooltip-group-container")
-            .attr("heigth", object.curveHeight);
-        for (let i = 1; i < this.commons.stringSequence.length; i++) {
-            let tooltipObject = {
-                x: i
-            };
-            console.log(i, histoG)
-            toolContainer
-                .append("g")
-                .attr("class", "tooltip-container")
-                .attr("transform", () => {
-                    return "translate(" + this.rectX(tooltipObject) + ",5)"
-                })
-                .attr("height", this.commons.elementHeight)
-                .append("rect")
-                .attr("class", "tooltip-rect")
-                .attr("width", (d) => {
-                    return 10
-                })
-                .attr("height", () => {
-                    console.log(object.curveHeight)
-                    return object.curveHeight
-                })
-                .style("fill", (d) => {
-                    return "red"
-                })
-                .style("fill-opacity", "0.6")
-                .call(d3.helper.tooltip(object));
-        }*/
-
         this.forcePropagation(histoG);
     }
 
@@ -956,11 +1035,13 @@ class FillSVG extends ComputingFunctions {
     public resizeBrush() {
 
         if (this.commons.svgContainer) {
-            let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
-            let thisbrush = this.commons.svgContainer.select(".brush");
-            thisbrush.select("rect")
-                .attr('height', rectArea.height)
-                .attr('width', rectArea.width);
+            if (this.commons.svgContainer.node() !== null) {
+                let rectArea = this.commons.svgContainer.node().getBoundingClientRect();
+                let thisbrush = this.commons.svgContainer.select(".brush");
+                thisbrush.select("rect")
+                    .attr('height', rectArea.height)
+                    .attr('width', rectArea.width);
+            }
         }
     };
 

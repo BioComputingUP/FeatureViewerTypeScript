@@ -3,7 +3,7 @@
 This is a code repository for the BioComputingUP Feature Viewer project.
 Full documentation at: http://protein.bio.unipd.it/feature-viewer.
 
-This project is based on the Javascript version [calipho-sib/feature-viewer](github.com/calipho-sib/feature-viewer), 
+This project is based on the Javascript version [calipho-sib/feature-viewer](https://github.com/calipho-sib/feature-viewer), 
 Copyright (c) 2015, SIB Swiss Institute of Bioinformatics. This version is <b>Typescript-based</b> 
 and compatible with <b>Angular 2+</b>.
 
@@ -93,7 +93,7 @@ If you have any problem or suggestion please open an issue.
 
 ## License
 
-This repo is based on [calipho-sib/feature-viewer](github.com/calipho-sib/feature-viewer), Copyright (c) 2015, SIB Swiss 
+This repo is based on [calipho-sib/feature-viewer](https://github.com/calipho-sib/feature-viewer), Copyright (c) 2015, SIB Swiss 
 Institute of Bioinformatics.
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public 

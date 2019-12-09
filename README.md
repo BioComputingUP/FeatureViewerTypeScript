@@ -30,8 +30,8 @@ import {FeatureViewer} from 'feature-viewer-typescript/lib';
 
 4 Create an instance of the feature viewer in javascript and style it
 ```typescript
-var proteinsequence = 'MTKFTILLISLLFCIAHTCSASKWQHQQDSCRKQLQGVNLTPCEKHIMEKIQGRGDDDDDDDDDNHILRTMRGRINYIRRNEGKDEDEE'
-var fv = new FeatureViewer(proteinsequence, '#myfv', {
+const proteinsequence = 'MTKFTILLISLLFCIAHTCSASKWQHQQDSCRKQLQGVNLTPCEKHIMEKIQGRGDDDDDDDDDNHILRTMRGRINYIRRNEGKDEDEE'
+const fv = new FeatureViewer(proteinsequence, '#myfv', {
                showAxis: true,
                showSequence: true,
                toolbar: true,
@@ -44,47 +44,48 @@ var fv = new FeatureViewer(proteinsequence, '#myfv', {
 5 Add features and subfeatures
 ```typescript
 fv.addFeatures(
-    [
+      [
         { // simple rect
-                type: 'rect',
-                id: 'useUniqueId',
-                data: [ {
-                  x: 50, y: 78,
-                  tooltip: '<button class="myButton">Button</button>'} ],
-              },
-        { // curve, height and yLim
-                type: 'curve',
-                id: 'mycurve',
-                label: 'Curve label',
-                data: [{x: 1, y: 0}, {x: 40, y: 102}, {x: 80, y: 5}, {x: 50, y: 184}, {x: 75, y: 4}],
-                height: 1,
-                yLim: 200,
-                color: '#00babd'
-              },
-        { // path with tooltip and subfeatures
-                type: 'path',
-                id: 'mypath',
-                label: 'Path feature',
-                data: [{x: 10 , y: 100}, {x: 50, y: 70}, {x: 40, y: 60, color: '#00ac8f', tooltip: 'I have different color'}],
-                color: '#61795e',
-                height: 10,
-                tooltip: '<b>Very</b> <span style="color: #C21F39">Stylable</span> <b><i><span style="color: #ffc520">Tooltip </span></i></b>',
-                subfeatures: [
-                    {
-                                type: 'rect',
-                                data: [
-                                  {x: 20, y: 30},
-                                  {x: 15, y: 45},
-                                  {x: 70, y: 76, label: 'myRect', tooltip: 'myTooltip'}
-                                ],
-                                id: 'aDifferentId',
-                                label: 'I am a subfeature!'
-                              }
-                ]
-              }
-     ]
- )
+          type: 'rect',
+          id: 'useUniqueId',
+          data: [ {
+            x: 50, y: 78,
+            tooltip: '<button class="myButton">Button</button>'} ],
+        },
+        { // circles
+          type: 'circle',
+          id: 'mycircle',
+          label: 'Circle feature',
+          data: [{x: 10 , y: 100}, {x: 50, y: 70}, {x: 40, y: 60, color: '#00ac8f', tooltip: 'I have different color'}],
+          color: '#61795e'
+        },
+        { // curve (height and yLim) with tooltip and subfeatures
+          type: 'curve',
+          id: 'mycurve',
+          label: 'Curve label',
+          data: [{x: 1, y: 0}, {x: 40, y: 102}, {x: 80, y: 5}, {x: 50, y: 184}, {x: 75, y: 4}],
+          height: 1,
+          yLim: 200,
+          color: '#00babd',
+          tooltip: '<b>Very</b> <span style="color: #C21F39">Stylable</span> <b><i><span style="color: #ffc520">Tooltip </span></i></b>',
+          subfeatures: [
+            {
+              type: 'rect',
+              data: [
+                {x: 20, y: 30},
+                {x: 15, y: 45},
+                {x: 70, y: 76, label: 'myRect', tooltip: 'myTooltip'}
+              ],
+              id: 'aDifferentId',
+              label: 'I am a subfeature!'
+            }
+          ]
+        }
+      ]
+    )
 ```
+
+![Feature Viewer](assets/fvDemo.png)
 
 ## Support
 

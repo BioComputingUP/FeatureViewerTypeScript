@@ -13,22 +13,22 @@ Represent biological data with the feature viewer library! Used in [MobiDB](http
 
 ## Getting started
 
-1. Install the library using npm
+1 Install the library using npm
 ```
 npm install feature-viewer-typescript
 ```
 
-2. Import the feature viewer in javascript or your angular component
+2 Import the feature viewer in javascript or your angular component
 ```typescript
 import {FeatureViewer} from 'feature-viewer-typescript/lib';
 ```
 
-2. Place the feature viewer in your html
+3 Place the feature viewer in your html
 ```html
 <div id="myfv"></div>
 ```
 
-3. Create an instance of the feature viewer in javascript and style it
+4 Create an instance of the feature viewer in javascript and style it
 ```typescript
 var proteinsequence = 'MTKFTILLISLLFCIAHTCSASKWQHQQDSCRKQLQGVNLTPCEKHIMEKIQGRGDDDDDDDDDNHILRTMRGRINYIRRNEGKDEDEE'
 var fv = new FeatureViewer(proteinsequence, '#myfv', {
@@ -41,7 +41,7 @@ var fv = new FeatureViewer(proteinsequence, '#myfv', {
            });
 ```
 
-4. Add features and subfeatures
+5 Add features and subfeatures
 ```typescript
 fv.addFeatures(
     [

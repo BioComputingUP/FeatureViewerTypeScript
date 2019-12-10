@@ -443,7 +443,7 @@ class FeatureViewer {
             });
         // background containers, update width
         this.commons.svgContainer.attr("transform", "translate(" + (this.commons.viewerOptions.margin.left).toString() + ",10)");
-        this.commons.tagsContainer.attr("transform","translate(" + (this.commons.viewerOptions.width + this.commons.viewerOptions.margin.left) + "," + this.commons.viewerOptions.margin.top + ")")
+        // this.commons.tagsContainer.attr("transform","translate(" + (this.commons.viewerOptions.width + this.commons.viewerOptions.margin.left) + "," + this.commons.viewerOptions.margin.top + ")")
     }
 
     private updateWindow() {

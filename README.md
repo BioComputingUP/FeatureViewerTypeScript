@@ -4,12 +4,18 @@ This is a code repository for the BioComputingUP Feature Viewer project.
 Full documentation at: http://protein.bio.unipd.it/feature-viewer.
 
 This project is based on the Javascript version [calipho-sib/feature-viewer](https://github.com/calipho-sib/feature-viewer), 
-Copyright (c) 2015, SIB Swiss Institute of Bioinformatics. This version is <b>Typescript-based</b> 
-and compatible with <b>Angular 2+</b>.
+Copyright (c) 2015, SIB Swiss Institute of Bioinformatics. This version is based on [Typescript](https://www.typescriptlang.org/) 
+and compatible with [Angular 2+](https://angular.io/) framework.
 
 Represent biological data with the feature viewer library! Used in [MobiDB](http://mobidb.bio.unipd.it/), 
 [DisProt](http://www.disprot.org/), [RepeatsDB](http://repeatsdb.bio.unipd.it/) and 
 [PhytotypeDB](http://phytotypedb.bio.unipd.it/).
+
+## Dependencies
+
+* [Typescript](https://www.typescriptlang.org/) 
+* [D3](https://d3js.org/)
+* [html-to-image](https://www.npmjs.com/package/html-to-image)
 
 ## Getting started
 
@@ -84,6 +90,8 @@ fv.addFeatures(
       ]
     )
 ```
+
+6 Output
 
 ![Feature Viewer](assets/fvDemo.png)
 

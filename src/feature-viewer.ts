@@ -516,7 +516,7 @@ class FeatureViewer {
                 .transition().duration(500)
         }
         d3.select(`#${this.commons.divId}`).select('#tags_container')
-            .attr("transform", "translate(" + (this.commons.viewerOptions.margin.left + this.commons.viewerOptions.width).toString() + ",10)");
+            .attr("transform", "translate(" + (this.commons.viewerOptions.margin.left + this.commons.viewerOptions.width + 10).toString() + ",10)");
 
 
         this.transition_data(this.commons.features, this.commons.current_extend.start);

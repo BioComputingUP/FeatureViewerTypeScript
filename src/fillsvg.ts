@@ -340,7 +340,6 @@ class FillSVG extends ComputingFunctions {
 
                         let content;
                         if (bt.type == "button") {
-                            console.log(this.commons.viewerOptions.flagColor)
                             let cl = this.hexToRgb(this.commons.viewerOptions.flagColor);
                             let col = 'rgba(' + [cl.b, cl.g, cl.r].join(',') + ')'
                             let colalph = 'rgba(' + [cl.b, cl.g, cl.r].join(',') + ',0.8)'

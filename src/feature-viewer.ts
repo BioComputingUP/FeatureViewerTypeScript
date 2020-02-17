@@ -454,7 +454,6 @@ class FeatureViewer {
         if ('hasSubFeatures' in d && d.hasSubFeatures) {totalspace += 20}
         if (this.commons.headMargin) {totalspace += this.commons.headMargin + 8}
         let space = this.commons.viewerOptions.labelTrackWidthMobile - 15 - totalspace
-        console.log(d.label, space)
         if (space < 20) {
             return '0px';
         } else {
@@ -1600,8 +1599,12 @@ class FeatureViewer {
         this.commons.fvLength = sequence.length;
 
         // parse user options
-        this.parseUserOptions(options);
-        // sets width too, new re-set it again but in case of window resize
+        if (options) {
+            this.parseUserOptions(options);
+            // sets width too, new re-set it again but in case of window resize
+        } else {
+            this.parseUserOptions({});
+        }
 
         this.fillSVG = new FillSVG(this.commons);
         this.subfeaturesTransition = new SubfeaturesTransition(this.commons);

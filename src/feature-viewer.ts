@@ -208,13 +208,13 @@ class FeatureViewer {
             .call(this.commons.d3helper.flagTooltip());
         //.call(d3.helper.genericTooltip({}));
 
+
         // create polygon
         this.commons.yAxisSVGGroup
             .append("polygon") // attach a polygon
             .attr("class", "boxshadow Arrow")
             .style("stroke", (d) => {
-                if (d.flagColor) return d.flagColor;
-                return this.commons.viewerOptions.flagColor // or flagColor
+                return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
             }) // colour the border if selected
             .attr("points", (d) => {
                 // match points with subFeature level
@@ -223,8 +223,7 @@ class FeatureViewer {
             })
             .attr("transform", d => "translate(" + (20 * (d.flagLevel - 1))  + ",0)")
             .style("fill", (d) => {
-                if (d.flagColor) return d.flagColor;
-                return this.commons.viewerOptions.flagColor // or flagColor
+                return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
             });
 
         // foreingObject for chevron
@@ -259,12 +258,13 @@ class FeatureViewer {
             // text
             .attr("class", "yAxis")
             .style("display", (d) => {
-                // text only if space is enough
-                if (this.commons.viewerOptions.mobileMode) {
-                    return "none";
-                } else {
-                    return "block";
-                }
+                // text only if space is enough: calculate if space is enough
+                // if (this.commons.viewerOptions.mobileMode) {
+                //     return "none";
+                // } else {
+                //     return "block";
+                // }
+                return "block";
             })
             .attr("x", (d) => {
                 let cvm = 0;
@@ -288,7 +288,7 @@ class FeatureViewer {
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
-                    return "15px";
+                    this.calcFlagWidth(d);
                 } else {
                     let margin = 20 + (20 * d.flagLevel)
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
@@ -426,16 +426,18 @@ class FeatureViewer {
         let flags_text = d3.select(`#${this.divId}`).selectAll(".yAxis")
             .style("display", (d) => {
                 // text only if space is enough
-                if (this.commons.viewerOptions.mobileMode) {
-                    return "none";
-                } else {
-                    return "block";
-                }
+                // if (this.commons.viewerOptions.mobileMode) {
+                //     return "none";
+                // } else {
+                //     return "block";
+                // }
+                return "block";
             })
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
-                    return "15px";
+                    // text width depends on mobile width, flaglevel and presence of subfeatures icon
+                    return this.calcFlagWidth(d);
                 } else {
                     let margin = 20 + (20 * d['flagLevel']);
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
@@ -444,6 +446,20 @@ class FeatureViewer {
         // background containers, update width
         this.commons.svgContainer.attr("transform", "translate(" + (this.commons.viewerOptions.margin.left).toString() + ",10)");
         // this.commons.tagsContainer.attr("transform","translate(" + (this.commons.viewerOptions.width + this.commons.viewerOptions.margin.left) + "," + this.commons.viewerOptions.margin.top + ")")
+    }
+
+    private calcFlagWidth(d) {
+        this.commons.headMargin = 20 * (d.flagLevel - 1);
+        let totalspace = 0
+        if ('hasSubFeatures' in d && d.hasSubFeatures) {totalspace += 20}
+        if (this.commons.headMargin) {totalspace += this.commons.headMargin + 8}
+        let space = this.commons.viewerOptions.labelTrackWidthMobile - 15 - totalspace
+        console.log(d.label, space)
+        if (space < 20) {
+            return '0px';
+        } else {
+            return space +'px';
+        }
     }
 
     private updateWindow() {
@@ -540,6 +556,8 @@ class FeatureViewer {
                 this.transition.circle(o);
             } else if (o.type === "path") {
                 this.transition.path(o);
+            } else if (o.type === "lollipop") {
+                this.transition.lollipop(o);
             } else if (o.type === "curve") {
                 this.transition.lineTransition(o);
             }
@@ -937,6 +955,7 @@ class FeatureViewer {
     // interact with features
 
     private addFeatureCore(object, flagLevel = 1, position = null) {
+
 
         this.commons.YPosition += this.commons.step;
         // if no label is given, id on flag

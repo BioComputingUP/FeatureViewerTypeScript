@@ -33,15 +33,15 @@ class ComputingFunctions {
         //let hue = ((1 - percent) * 120).toString(10);
         let hue;
         if (percent === 0) {
-            hue = 'white'
+            hue = '#ffffff'
         } else if (percent > 0 && percent <= 15) {
-            hue = 'lightgreen'
+            hue = '#d2d2f8'
         } else if (percent > 15 && percent < 50) {
-            hue = 'yellow'
+            hue = '#a6a6f1'
         } else if (percent >= 50 && percent < 100) {
-            hue = 'red'
+            hue = '#7a7aeb'
         } else if (percent === 100) {
-            hue = 'black'
+            hue = '#4e4ee4'
         }
         return hue;
         //return ["hsl(", hue, ",100%,50%)"].join("");

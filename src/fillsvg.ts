@@ -46,7 +46,7 @@ class PreComputing {
 
     public preComputingLine(object) {
 
-        if (!object.height) { object.height = 10 };
+        if (!object.height) { object.height = this.commons.step / 2 };
         let shift = parseInt(object.height);
         let level = 0;
 
@@ -125,6 +125,41 @@ class FillSVG extends ComputingFunctions {
     private calculate: Calculate;
     private storeData;
 
+    private hexToRgb(hex) {
+        // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+            return r + r + g + g + b + b;
+        });
+
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    };
+
+    private isLight(mycolor) {
+        let color = mycolor.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+        let r = color[1];
+        let g = color[2];
+        let b = color[3];
+        // HSP (Highly Sensitive Poo) equation from http://alienryderflex.com/hsp.html
+        let hsp = Math.sqrt(
+            0.299 * (r * r) +
+            0.587 * (g * g) +
+            0.114 * (b * b)
+        );
+        // Using the HSP value, determine whether the color is light or dark
+        if (hsp>127.5) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     private sbcRip(d, i, r) {
         let l = d.length, RGB = {};
         if (l > 9) {
@@ -169,13 +204,6 @@ class FillSVG extends ComputingFunctions {
 
     public typeIdentifier(object) {
 
-        // add tags after updating y position
-        /*if (this.commons.viewerOptions.showDisorderContentTag || this.commons.viewerOptions.showLinkTag) {
-            this.tagArea(object);
-        }*/
-        this.tagArea(object);
-        // yData is data for flags, this.rectangle etc. draw the actual objects
-
         let thisYPosition;
         if (object.type === "curve") {
             if (!object.height) { object.height = 10 };
@@ -184,6 +212,9 @@ class FillSVG extends ComputingFunctions {
         } else {
             thisYPosition = this.commons.YPosition;
         }
+
+        this.tagArea(object, thisYPosition);
+        // yData is data for flags, this.rectangle etc. draw the actual objects
 
         this.commons.yData.push({
             hasSubFeatures: object.subfeatures ? true: false,
@@ -218,13 +249,13 @@ class FillSVG extends ComputingFunctions {
         else if (object.type === "unique") {
 
             this.unique(object, this.commons.YPosition);
-            this.commons.YPosition += 5;
+            // this.commons.YPosition += 5;
 
         }
         else if (object.type === "circle") {
 
             this.circle(object, this.commons.YPosition);
-            this.commons.YPosition += 5;
+            // this.commons.YPosition += 5;
 
         }
         else if (object.type === "multipleRect") {
@@ -239,9 +270,9 @@ class FillSVG extends ComputingFunctions {
             // this type of object overwrites object data, after fillSVG go back to original
             this.storeData = object.data;
             this.preComputing.path(object);
-            this.path(object, this.commons.YPosition);
+            this.path(object, this.commons.YPosition - 8);
             object.data = this.storeData;
-            this.commons.YPosition += this.commons.pathLevel;
+            // this.commons.YPosition += this.commons.pathLevel;
 
         }
         else if (object.type === "curve") {
@@ -266,14 +297,16 @@ class FillSVG extends ComputingFunctions {
         }
         else if (object.type === "lollipop") {
             this.lollipop(object, this.commons.YPosition);
+            // this.commons.YPosition += 5;
         }
     }
 
-    public tagArea(object) {
-
-        let thisYPosition = this.commons.YPosition;
+    public tagArea(object, thisYPosition) {
 
         // var threeArray = [showDisorderContentTag, showViewerTag, showLinkTag];
+
+        // adjust height not triangle
+        if (object.type !== 'rect') {thisYPosition -= 5}
 
         let id = 't' + object.id + "_tagarea";
         let featureArea = this.commons.tagsContainer.append("g")
@@ -288,7 +321,6 @@ class FillSVG extends ComputingFunctions {
             // check type and add html elements accordingly
             for (const bt of object.sidebar) {
                 if (bt.type) {
-
                     if (bt.type !== "button" && bt.type !== "percentage" && bt.type !== "link" && bt.type !== "icon") {
                         this.commons.logger.error("Unknown type of button", {method:'addFeatures',fvId:this.commons.divId,featureId:object.id,buttonId:bt.buttonId})
                     } else {
@@ -308,13 +340,19 @@ class FillSVG extends ComputingFunctions {
 
                         let content;
                         if (bt.type == "button") {
-                            content = `<button class="mybutton" id="${bt.id}" style="color: rgba(39, 37, 37, 0.9);">${bt.label}</button>`
+                            console.log(this.commons.viewerOptions.flagColor)
+                            let cl = this.hexToRgb(this.commons.viewerOptions.flagColor);
+                            let col = 'rgba(' + [cl.b, cl.g, cl.r].join(',') + ')'
+                            let colalph = 'rgba(' + [cl.b, cl.g, cl.r].join(',') + ',0.8)'
+                            let coltext = this.isLight(col) ? 'black' : 'white';
+                            content = `<button class="mybutton" id="${bt.id}" style="background-color: ${colalph}; border:2px solid ${col}">${bt.label}</button>`
                         }
                         else if (bt.type == "percentage") {
                             let disordersString = bt.label.toString() + '%';
-                            let color = this.gradientColor(bt.label);
-                            let textColor = (color === "rgba(39, 37, 37, 0.9)") ? "white": "rgba(39, 37, 37, 0.9)";
-                            content = `<button id="${bt.id}" class="mybutton" style="background-color: ${color}; color: ${textColor}">${disordersString}</button>`
+                            let colorrgb = this.hexToRgb(this.gradientColor(bt.label));
+                            let color = 'rgba(' + [colorrgb.r, colorrgb.g, colorrgb.b].join(',') + ')';
+                            let textColor = this.isLight(color) ? "black" : "white";
+                            content = `<button id="${bt.id}" class="mybutton" style="background-color: ${color.replace(')', ',0.8)')}; color: ${textColor}; border: 2px solid ${color}"><span style="font-size: small">${disordersString}</span></button>`
                         }
                         else if (bt.type == "link") {
                             let linkicon = "M9.26 13c-0.167-0.286-0.266-0.63-0.266-0.996 0-0.374 0.103-0.724 0.281-1.023l-0.005 0.009c1.549-0.13 2.757-1.419 2.757-2.99 0-1.657-1.343-3-3-3-0.009 0-0.019 0-0.028 0l0.001-0h-4c-1.657 0-3 1.343-3 3s1.343 3 3 3v0h0.080c-0.053 0.301-0.083 0.647-0.083 1s0.030 0.699 0.088 1.036l-0.005-0.036h-0.080c-2.761 0-5-2.239-5-5s2.239-5 5-5v0h4c0.039-0.001 0.084-0.002 0.13-0.002 2.762 0 5.002 2.239 5.002 5.002 0 2.717-2.166 4.927-4.865 5l-0.007 0zM10.74 7c0.167 0.286 0.266 0.63 0.266 0.996 0 0.374-0.103 0.724-0.281 1.023l0.005-0.009c-1.549 0.13-2.757 1.419-2.757 2.99 0 1.657 1.343 3 3 3 0.009 0 0.019-0 0.028-0l-0.001 0h4c1.657 0 3-1.343 3-3s-1.343-3-3-3v0h-0.080c0.053-0.301 0.083-0.647 0.083-1s-0.030-0.699-0.088-1.036l0.005 0.036h0.080c2.761 0 5 2.239 5 5s-2.239 5-5 5v0h-4c-0.039 0.001-0.084 0.002-0.13 0.002-2.762 0-5.002-2.239-5.002-5.002 0-2.717 2.166-4.927 4.865-5l0.007-0z"
@@ -661,8 +699,8 @@ class FillSVG extends ComputingFunctions {
             .attr("d", this.commons.line)
             .attr("class", "line " + object.className)
             .style("z-index", "0")
-            .style("stroke", object.color)
-            .style("stroke-width", "1px");
+            .style("stroke", 'grey')
+            .style("stroke-width", "0.5px");
 
         let readyData = [...object.data];
 
@@ -676,9 +714,10 @@ class FillSVG extends ComputingFunctions {
             .attr("y2", (d) => {
                 let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
                 if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
-                return w + 4;
+                return w + 2;
             })
             .attr("y1", -8)
+            .attr("class", "lineElement " + object.className)
             .style("stroke", (d) => {
                 return d.color || object.color
             })
@@ -766,8 +805,8 @@ class FillSVG extends ComputingFunctions {
             .attr("d", this.commons.line)
             .attr("class", "line " + object.className)
             .style("z-index", "0")
-            .style("stroke", object.color)
-            .style("stroke-width", "1px");
+            .style("stroke", 'grey')
+            .style("stroke-width", "0.5px");
 
         let readyData = [...object.data];
 
@@ -848,7 +887,6 @@ class FillSVG extends ComputingFunctions {
             y: 0
         }]);
 
-        /* deprecated basal line
         pathsDB.selectAll(".line " + object.className)
             .data(dataLine)
             .enter()
@@ -856,8 +894,8 @@ class FillSVG extends ComputingFunctions {
             .attr("d", this.commons.line)
             .attr("class", "line " + object.className)
             .style("z-index", "0")
-            .style("stroke", "grey")
-            .style("stroke-width", "1px");*/
+            .style("stroke", 'grey')
+            .style("stroke-width", "0.5px");
 
         pathsDB.selectAll(".path" + object.className)
             .data(object.data)
@@ -881,7 +919,7 @@ class FillSVG extends ComputingFunctions {
 
         this.forcePropagation(pathsDB);
         // re-init object.heigth
-        // object.height = undefined;
+        object.height = this.commons.step / 2;
 
     }
 

@@ -114,6 +114,43 @@ export class Transition extends ComputingFunctions {
 
     }
 
+    public lollipop(object) {
+
+        let container = this.commons.svgContainer.select(`#c${object.id}_container`);
+        // line does not require transition
+
+        let transit1, transit2;
+        if (this.commons.animation) {
+            transit1 = container.selectAll(".element")
+                .transition()
+                .duration(500);
+            transit2 = container.selectAll(".lineElement")
+                .transition()
+                .duration(500);
+        }
+        else {
+            transit1 = container.selectAll(".element");
+            transit2 = container.selectAll(".lineElement");
+        }
+        transit1
+            .attr("cx", (d) => {
+                return this.commons.scaling(d.x)
+            });
+        transit2
+            .attr("x1", (d) => {
+                return this.commons.scaling(d.x)
+            })
+            .attr("x2", (d) => {
+                return this.commons.scaling(d.x)
+            })
+            .attr("y2", (d) => {
+                let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
+                if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
+                return w + 4;
+            });
+
+    }
+
     public circle(object) {
 
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);

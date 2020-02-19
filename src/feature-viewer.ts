@@ -257,15 +257,6 @@ class FeatureViewer {
             .append("foreignObject")
             // text
             .attr("class", "yAxis")
-            .style("display", (d) => {
-                // text only if space is enough: calculate if space is enough
-                // if (this.commons.viewerOptions.mobileMode) {
-                //     return "none";
-                // } else {
-                //     return "block";
-                // }
-                return "block";
-            })
             .attr("x", (d) => {
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
@@ -288,7 +279,7 @@ class FeatureViewer {
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
-                    this.calcFlagWidth(d);
+                    return this.calcFlagWidth(d);
                 } else {
                     let margin = 20 + (20 * d.flagLevel)
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
@@ -424,15 +415,6 @@ class FeatureViewer {
             });
         this.commons.yAxisSVG.select(".flagBackground").attr("width", this.commons.viewerOptions.margin.left);
         let flags_text = d3.select(`#${this.divId}`).selectAll(".yAxis")
-            .style("display", (d) => {
-                // text only if space is enough
-                // if (this.commons.viewerOptions.mobileMode) {
-                //     return "none";
-                // } else {
-                //     return "block";
-                // }
-                return "block";
-            })
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {

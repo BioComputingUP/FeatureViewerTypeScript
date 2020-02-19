@@ -166,20 +166,21 @@ class Tool extends Calculate {
                     left = absoluteMousePos[0].toString();
                     top = absoluteMousePos[1].toString();
 
-                    if ('tooltip' in pD && pD['tooltip']) {
+                    // mobilemode labels overwrite tooltips
+                    if (this.commons.viewerOptions.mobileMode) {
+                        tooltipDiv.transition()
+                            .duration(200)
+                            .style("opacity", 1);
+                        tooltipDiv
+                            .html(pD['label'] || pD['id'])
+                            .style("left", left+'px')
+                            .style("top", top+'px');
+                    } else if ('tooltip' in pD && pD['tooltip']) {
                         tooltipDiv.transition()
                             .duration(200)
                             .style("opacity", 1);
                         tooltipDiv
                             .html(pD['tooltip'])
-                            .style("left", left+'px')
-                            .style("top", top+'px');
-                    } else if (this.commons.viewerOptions.mobileMode) {
-                        tooltipDiv.transition()
-                            .duration(200)
-                            .style("opacity", 1);
-                        tooltipDiv
-                            .html(pD['title'])
                             .style("left", left+'px')
                             .style("top", top+'px');
                     }

@@ -623,9 +623,7 @@ class FeatureViewer {
         let rtickStep = Math.round(this.commons.fvLength/10); // fraction of a tenth
         let tickStep = Math.round(rtickStep/10)*10; // nearest 10th multiple
 
-        let tickArray = Array(this.commons.fvLength)
-          .fill(0)
-          .map(function (value, index, ar) { return index; })
+        let tickArray = Array.from(Array(this.commons.fvLength).keys())
           .filter(function (value, index, ar) {
             return (index % tickStep == 0 && index !== 0);
           });

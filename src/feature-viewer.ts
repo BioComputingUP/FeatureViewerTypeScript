@@ -623,9 +623,12 @@ class FeatureViewer {
         let rtickStep = Math.round(this.commons.fvLength/10); // fraction of a tenth
         let tickStep = Math.round(rtickStep/10)*10; // nearest 10th multiple
 
-        let tickArray = Array.apply(null, {length: this.commons.fvLength}).map(Number.call, Number).filter(function (value, index, ar) {
+        let tickArray = Array(this.commons.fvLength)
+          .fill(0)
+          .map(function (value, index, ar) { return index; })
+          .filter(function (value, index, ar) {
             return (index % tickStep == 0 && index !== 0);
-        } );
+          });
 
         //Create Axis
         this.commons.xAxis = d3.axisBottom(this.commons.scaling)

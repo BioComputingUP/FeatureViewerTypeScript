@@ -8,5 +8,6 @@ export const mybuttoncircle: string;
 export const axis: string;
 export const arrow: string;
 export const fvtooltip: string;
+export const fvcustomtooltip: string;
 export const pageoverlay: string;
 export const loadingcolorflag: string;

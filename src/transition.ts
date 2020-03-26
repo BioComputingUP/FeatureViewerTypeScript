@@ -44,8 +44,8 @@ export class Transition extends ComputingFunctions {
 
         let transit1, transit2;
         // group selection
-        transit1 = container.selectAll("." + object.className + "Group")
-        transit2 = container.selectAll("." + object.className)
+        transit1 = container.selectAll("." + "rectfv" + "Group")
+        transit2 = container.selectAll("." + "rectfv")
         // transition
         if (this.commons.animation) {
             transit1
@@ -79,7 +79,7 @@ export class Transition extends ComputingFunctions {
     public multiRec(object) {
 
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);
-        container.selectAll("." + object.className)
+        container.selectAll("." + "rectfv")
             .attr("x",  (d) => {
                 return this.commons.scaling(d['x'])
             })
@@ -179,7 +179,7 @@ export class Transition extends ComputingFunctions {
     public path(object) {
 
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);
-        container.selectAll(".line" + object.className)
+        container.selectAll(".line")
             .attr("d", this.commons.lineBond.x((d) => {
                     return this.commons.scaling(d['x']);
                 })
@@ -189,12 +189,12 @@ export class Transition extends ComputingFunctions {
             );
         let transit;
         if (this.commons.animation) {
-            transit = container.selectAll("." + object.className)
+            transit = container.selectAll("." + "pathfv")
                 .transition()
                 .duration(0);
         }
         else {
-            transit = container.selectAll("." + object.className);
+            transit = container.selectAll("." + "pathfv");
         }
         transit
             .attr("d", this.commons.lineBond.y((d) => {

@@ -29,12 +29,21 @@ npm install feature-viewer-typescript
 import {FeatureViewer} from 'feature-viewer-typescript/lib';
 ```
 
-3 Place the feature viewer in your html
+3 Optional: if you are installing the feature viewer in an Angular 2+ based App, you may 
+need to load the feature viewer stylesheet in your angular.json "styles" to 
+ensure the correct pioritization of stylesheets.
+```json
+styles: [
+    "./node_modules/feature-viewer-typescript/assets/fv.scss"
+]
+```
+
+4 Place the feature viewer in your html
 ```html
 <div id="myfv"></div>
 ```
 
-4 Create an instance of the feature viewer in javascript and style it
+5 Create an instance of the feature viewer in javascript and style it
 ```typescript
 const proteinsequence = 'MTKFTILLISLLFCIAHTCSASKWQHQQDSCRKQLQGVNLTPCEKHIMEKIQGRGDDDDDDDDDNHILRTMRGRINYIRRNEGKDEDEE'
 const fv = new FeatureViewer(proteinsequence, '#myfv', {
@@ -47,7 +56,7 @@ const fv = new FeatureViewer(proteinsequence, '#myfv', {
            });
 ```
 
-5 Add features and subfeatures
+6 Add features and subfeatures
 ```typescript
 fv.addFeatures(
       [
@@ -91,7 +100,7 @@ fv.addFeatures(
     )
 ```
 
-6 Output
+7 Output
 
 ![Feature Viewer](assets/fvDemo.png)
 

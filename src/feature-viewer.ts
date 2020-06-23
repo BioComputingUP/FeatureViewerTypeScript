@@ -374,6 +374,8 @@ class FeatureViewer {
                     this.commons.logger.warn("Zoom greater than " + this.commons.viewerOptions.zoomMax + " is prevented", {fvId:this.divId});
                 }
 
+                this.commons.currentzoom = zoomScale;
+
 
                 if (CustomEvent) {
 
@@ -509,8 +511,8 @@ class FeatureViewer {
 
 
         if (this.commons.animation) {
-            d3.select(`#${this.commons.divId}`).select('#tags_container')
-                .transition().duration(500)
+            // @ts-ignore
+            d3.select(`#${this.commons.divId}`).select('#tags_container').transition().duration(500)
         }
         d3.select(`#${this.commons.divId}`).select('#tags_container')
             .attr("transform", "translate(" + (this.commons.viewerOptions.margin.left + this.commons.viewerOptions.width + 10).toString() + ",10)");
@@ -861,7 +863,15 @@ class FeatureViewer {
         }
 
         this.commons.svgContainer.on('mousemove', () => {
-            let pos = this.getCurrentPosition();
+            let absoluteMousePos = d3.mouse(this.commons.svgContainer.node());
+            let posN = Math.round(this.commons.scalingPosition(absoluteMousePos[0]));
+            let pos;
+            if (!this.commons.viewerOptions.positionWithoutLetter) {
+                pos = `${posN}${this.sequence[posN] || ""}`;
+            } else {
+                pos = posN.toString();
+            }
+            this.commons.currentposition = pos;
             if (this.commons.viewerOptions.toolbar) {
                 // d3.select(`${this.divId} #zoomPosition`).text(pos);
                 document.querySelector(`#${this.divId} #zoomPosition`).innerHTML = pos;
@@ -1069,43 +1079,11 @@ class FeatureViewer {
     /*** PUBLIC FUNCTIONS ***/
 
     public getCurrentPosition() {
-
-        let absoluteMousePos = d3.mouse(this.commons.svgContainer.node());
-        let posN = Math.round(this.commons.scalingPosition(absoluteMousePos[0]));
-        let pos;
-        if (!this.commons.viewerOptions.positionWithoutLetter) {
-            pos = `${posN}${this.sequence[posN] || ""}`;
-        } else {
-            pos = posN.toString();
-        }
-        return pos;
+        return this.commons.currentposition;
     }
 
     public getCurrentZoom() {
-
-        let zoomScale;
-        // d3 v4
-        this.commons.extent = currentEvent.selection;
-        if (this.commons.extent) { // zooming
-            let borders = [this.commons.extent[0], this.commons.extent[1]].map(this.commons.scaling.invert, this.commons.scaling);
-            let start = Math.round(Number(borders[0])),
-                end = Math.round(Number(borders[1]));
-            if (start < 0) {
-                start = 0
-            }
-            let extentLength = end - start;
-
-            if (extentLength > this.commons.viewerOptions.zoomMax) {
-                // variables for logger
-                zoomScale = (this.commons.fvLength / extentLength).toFixed(1);
-                d3.select(`#${this.divId}`).select(".zoomUnit")
-                    .text(zoomScale.toString());
-            } else {
-                zoomScale = "Prevented";
-                this.commons.logger.warn("Zoom greater than " + this.commons.viewerOptions.zoomMax + " is prevented", {fvId:this.divId});
-            }
-            return zoomScale;
-        }
+        return this.commons.currentzoom;
     }
 
     public showHelp() {

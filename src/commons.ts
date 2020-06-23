@@ -93,6 +93,8 @@ class Commons {
     public style: any;
     public logger: any;
     public backgroundcolor: string;
+    public currentposition: number;
+    public currentzoom: number;
 
     private _current_extend = null;
 

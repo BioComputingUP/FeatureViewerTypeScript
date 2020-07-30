@@ -198,7 +198,11 @@ class FeatureViewer {
                     return d.id
                 }
             })
-            .attr("class", "flag")
+            .attr("class", (d) => {
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                    return "flag withsubfeatures"
+                } else { return "flag" }
+            })
             .on('click', (d) => {
                 // if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                 //     this.clickFlag(d)
@@ -222,7 +226,11 @@ class FeatureViewer {
         // create polygon
         this.commons.yAxisSVGGroup
             .append("polygon") // attach a polygon
-            .attr("class", "boxshadow Arrow")
+            .attr("class", (d) => {
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                    return "boxshadow Arrow withsubfeatures"
+                } else { return "boxshadow Arrow" }
+            })
             .style("stroke", (d) => {
                 return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
             }) // colour the border if selected
@@ -253,6 +261,11 @@ class FeatureViewer {
             })
             .append("path")
             .attr("id", "chevron")
+            .attr("class", (d) => {
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                    return "chevron withsubfeatures"
+                } else { return "chevron" }
+            })
             .attr("fill", "rgba(39, 37, 37, 0.71)")
             .attr("d", (d) => {
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
@@ -266,7 +279,11 @@ class FeatureViewer {
         this.commons.yAxisSVGGroup
             .append("foreignObject")
             // text
-            .attr("class", "yAxis")
+            .attr("class", (d) => {
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                    return "yAxis withsubfeatures"
+                } else { return "yAxis" }
+            })
             .attr("x", (d) => {
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
@@ -1536,54 +1553,70 @@ class FeatureViewer {
 
         this.commons.viewerOptions.backup.features = featureList;
 
-        // check ids are unique
-        const uniqueIds = [...new Set(featureList.map(item => item.id))];
-        if (uniqueIds.length !== featureList.length) {
+        let featureids = featureList.map(item => item.id).filter(e => {return e});
 
-            this.commons.logger.error("Feature ids are not unique", {method:'addFeatures',fvId:this.divId})
-
-        } else {
-
-            // check ids are valid
-            let regexIds = new RegExp('^[a-zA-Z]')
-            let wrongIds = uniqueIds.filter((i)=>{
-                return !regexIds.test(i)
-            });
-            if (wrongIds.length !== 0) {
-                this.commons.logger.error("Some feature ids are not valid, html ids cannot start with digits", {method:'addFeatures',fvId:this.divId,wrongIds:wrongIds})
-            } else {
-
-                // add to viewer
-
-                // features already in viewer?
-                let unflatted = this.calculate.unflatten(
-                    featureList,
-                    null,
-                    null,
-                    this.commons.features.length !== 0 ? this.commons.features : null
-                );
-
-                // add new structured features to the old ones (if any, else sequence)
-                this.commons.features = this.commons.features.concat(unflatted.tree);
-                let ftsIds = unflatted.ids;
-
-                // check if features are missing from the tree
-                let unprocessedIds = uniqueIds.filter((x)=>{
-                    return !(ftsIds.has(x))
-                });
-                if (unprocessedIds.length !== 0) {
-                    this.commons.logger.error("Subfeatures with no known parentId", {method:'addFeatures',fvId:this.divId,features:unprocessedIds})
-                }
-
-                // features already in viewer? empty it before drawing
-                this.commons.features = this.emptyFeatures()
-
-                // draw the viewer
-                this.drawFeatures()
-
+        // check ids are present
+        if (featureids.length !== featureList.length) {
+            this.commons.logger.error("Feature ids are not present on all features, creating random ids",
+                {method:'addFeatures',fvId:this.divId})
+            for (let f of featureList) {
+                if (!f.id) {f.id = 'customid' + Math.random().toString(36).substring(7);}
             }
-
+            featureids = featureList.map(item => item.id).filter(e => {return e});
         }
+
+        let regexIds = new RegExp('^[a-zA-Z]')
+
+        // check ids are valid
+        for (let f of featureList) {
+            if (!regexIds.test(f.id)) {
+                this.commons.logger.error("Id " + f.id + "is not a valid html id, substituting it randomly",
+                    {method:'addFeatures',fvId:this.divId})
+                f.id = 'customid' + Math.random().toString(36).substring(7);
+            }
+        }
+        featureids = featureList.map(item => item.id).filter(e => {return e});
+
+        // check ids are unique
+        const uniqueIds = [...new Set(featureids)];
+        if (uniqueIds.length !== featureList.length) {
+            this.commons.logger.error("Feature ids are not unique, substituting the non unique ones randomly",
+                {method:'addFeatures',fvId:this.divId})
+            let idsencountered = [];
+            for (let f of featureList) {
+                if (idsencountered.includes(f.id)) {f.id = 'customid' + Math.random().toString(36).substring(7);}
+                idsencountered.push(f.id);
+            }
+            featureids = featureList.map(item => item.id).filter(e => {return e});
+        }
+
+        // add to viewer
+
+        // features already in viewer?
+        let unflatted = this.calculate.unflatten(
+            featureList,
+            null,
+            null,
+            this.commons.features.length !== 0 ? this.commons.features : null
+        );
+
+        // add new structured features to the old ones (if any, else sequence)
+        this.commons.features = this.commons.features.concat(unflatted.tree);
+        let ftsIds = unflatted.ids;
+
+        // check if features are missing from the tree
+        let unprocessedIds = uniqueIds.filter((x)=>{
+            return !(ftsIds.has(x))
+        });
+        if (unprocessedIds.length !== 0) {
+            this.commons.logger.error("Subfeatures with no known parentId", {method:'addFeatures',fvId:this.divId,features:unprocessedIds})
+        }
+
+        // features already in viewer? empty it before drawing
+        this.commons.features = this.emptyFeatures()
+
+        // draw the viewer
+        this.drawFeatures()
 
     }
 

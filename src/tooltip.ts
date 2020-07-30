@@ -18,30 +18,32 @@ class Tool extends Calculate {
             let thisfeat = d3.select(`#${divId}`).select(`#${feat}`);
             thisfeat.style("fill-opacity", "1");
 
-            // color the background
-            let currentContainer = this.commons.svgContainer.node().getBoundingClientRect();
+            if (object.type !== 'unique') {
+                // color the background
+                let currentContainer = this.commons.svgContainer.node().getBoundingClientRect();
 
-            let selectRect;
-            if (d3.select(`#${divId}`).select(".selectionRect").node()) {
-                selectRect = d3.select(`#${divId}`).select(".selectionRect")
-            } else {
-                selectRect = this.commons.svgContainer
-                    .select(".brush")
-                    .append("rect")
-                    .attr("class", "selectionRect box-shadow")
-                    // add shadow?
-                    .attr("height", currentContainer.height)
+                let selectRect;
+                if (d3.select(`#${divId}`).select(".selectionRect").node()) {
+                    selectRect = d3.select(`#${divId}`).select(".selectionRect")
+                } else {
+                    selectRect = this.commons.svgContainer
+                        .select(".brush")
+                        .append("rect")
+                        .attr("class", "selectionRect box-shadow")
+                        // add shadow?
+                        .attr("height", currentContainer.height)
+                }
+                let thisy = this.getTransf((<HTMLElement>thisfeat.node()).parentElement)[0];
+
+                let myd3node = thisfeat.node();
+                let bcr = (<HTMLElement>myd3node).getBoundingClientRect().width;
+                selectRect
+                    .style("display", "block") // remove display none
+                    .attr("width", bcr) // - shift from the beginning
+                    .attr("transform", () => {
+                        return "translate(" + thisy + ",0)"
+                    })
             }
-            let thisy = this.getTransf((<HTMLElement>thisfeat.node()).parentElement)[0];
-
-            let myd3node = thisfeat.node();
-            let bcr = (<HTMLElement>myd3node).getBoundingClientRect().width;
-            selectRect
-                .style("display", "block") // remove display none
-                .attr("width", bcr) // - shift from the beginning
-                .attr("transform", () => {
-                    return "translate(" + thisy + ",0)"
-                })
         }
     };
 
@@ -423,6 +425,7 @@ class Tool extends Calculate {
                             let elemHover;
 
                             let forSelection = pD;
+                            // curve specifics
                             if (object.type === "curve") {
                                 elemHover = updateLineTooltipFunction(absoluteMousePos[0], pD, scalingFunction, labelTrackWidth);
                                 forSelection = elemHover;

@@ -652,7 +652,9 @@ class FillSVG extends ComputingFunctions {
             // .attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                return "f_" + object.id + Math.random().toString(36).substring(7);
+                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+                d.id = id;
+                return id;
             })
             .attr("x", (d) => {
                 return this.commons.scaling(d.x - 0.4)

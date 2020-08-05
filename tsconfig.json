@@ -14,6 +14,7 @@
       "underscore",
       "html-to-image"
     ],
+    "lib": ["es6", "dom", "es2017"],
     "outDir": "./lib"
   },
   "include": [

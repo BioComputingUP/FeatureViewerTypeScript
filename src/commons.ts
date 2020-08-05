@@ -1,4 +1,4 @@
-import {FeatureObject, ViewerOptions, FeaturesList, FeatureData, FeatureViewerLog} from './interfaces';
+import { FeatureObject, ViewerOptions, FeaturesList, FeatureData, FeatureViewerLog } from './interfaces';
 
 // let commons: Commons;
 
@@ -48,7 +48,11 @@ class Commons {
         toolbar: true,
         bubbleHelp: true,
         showAxis: true,
-        positionWithoutLetter: null
+        positionWithoutLetter: null,
+        drawLadder: true,
+        ladderWidth: 15,
+        ladderSpacing: 10,
+        ladderHeight: 18,
     };
     public mobilesize = 951;
     public radius = 5;
@@ -81,8 +85,8 @@ class Commons {
     public brush: any;
     public extent: any;
     public pathLevel = 0;
-    public step: number = 30;
-    public elementHeight: number = Math.floor(this.step / 2);
+    public step: number = 20;
+    public elementHeight: number = Math.floor(this.step / 1.2);
     public YPosition: number = this.step;
     public scaling: any;
     public lineGen: any;

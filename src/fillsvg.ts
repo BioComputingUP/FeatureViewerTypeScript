@@ -206,7 +206,7 @@ class FillSVG extends ComputingFunctions {
 
         let thisYPosition;
         if (object.type === "curve") {
-            if (!object.height) { object.height = 10 };
+            if (!object.height) { object.height = 10 }
             let shift = parseInt(object.height);
             thisYPosition = this.commons.YPosition + shift * 10 - 4 ;
         } else {
@@ -224,7 +224,9 @@ class FillSVG extends ComputingFunctions {
             y: thisYPosition,
             flagColor: object.flagColor,
             flagLevel: object.flagLevel,
-            isOpen: object.isOpen
+            isOpen: object.isOpen,
+            ladderColor: object.ladderColor? object.ladderColor : null,
+            ladderLabel: object.ladderLabel? object.ladderLabel : null
         });
 
         if (object.type === "rect") {
@@ -395,6 +397,7 @@ class FillSVG extends ComputingFunctions {
                         .append('foreignObject')
                         .attr("y", -6)
                         .attr("width", "100%")
+                        .attr("height", "100%")
                         .attr("height", "100%")
                         .append('xhtml:body')
                         .style("margin", "0")
@@ -1043,7 +1046,6 @@ class FillSVG extends ComputingFunctions {
     }
 
     // AXIS FUNCTIONS
-
     public reset_axis() {
         if (this.commons.animation) {
             this.commons.svgContainer.transition().duration(500);

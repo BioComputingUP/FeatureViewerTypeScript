@@ -38,6 +38,7 @@ export interface ViewerOptions {
     labelTrackWidth: number,
     labelTrackWidthMobile: number,
     tagsTrackWidth: number,
+    maxDepth?: number,
     margin: {
         top: number,
         bottom: number,
@@ -59,7 +60,12 @@ export interface ViewerOptions {
     toolbarPosition?: string,
     bubbleHelp: boolean,
     showAxis: boolean,
-    positionWithoutLetter: number
+    positionWithoutLetter: number,
+    drawLadder: boolean,
+    ladderWidth: number,
+    ladderHeight: number,
+    ladderSpacing: number,
+    labelSidebarWidth?: number
 }
 
 export interface FeaturesList extends Array<FeatureObject>{}

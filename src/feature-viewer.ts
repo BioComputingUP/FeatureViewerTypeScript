@@ -463,7 +463,7 @@ class FeatureViewer {
                     // text width depends on mobile width, flaglevel and presence of subfeatures icon
                     return this.calcFlagWidth(d);
                 } else {
-                    let margin = 20   // 20 + (20 * d['flagLevel']) --> 0
+                    let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth   // 20 + (20 * d['flagLevel']) --> 0
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
             });
@@ -487,14 +487,13 @@ class FeatureViewer {
     }
 
     private updateWindow() {
-        console.log('update window')
         // change width now
         if (d3.select(`#${this.divId}`).node() !== null) {
 
         let d3node = d3.select(`#${this.commons.divId}`).node();
         let totalwidth = (<HTMLElement>d3node).getBoundingClientRect().width;
 
-        // resize for mobile?
+        // resize for mobile
         if (totalwidth < this.commons.mobilesize) {
             if (!this.commons.viewerOptions.mobileMode) {
                 this.commons.viewerOptions.mobileMode = true;
@@ -515,6 +514,7 @@ class FeatureViewer {
             }
             this.commons.viewerOptions.margin.left = margins;
         }
+
         // update margins according to flagBackground width
         // resize for mobile
         this.resizeForMobile()
@@ -558,7 +558,6 @@ class FeatureViewer {
         this.fillSVG.resizeBrush()
 
         }
-        console.log(this.commons.viewerOptions.margin.left)
     }
 
     private transition_data(features, start) {
@@ -1660,4 +1659,3 @@ class FeatureViewer {
 }
 
 export {FeatureViewer};
-//export = FeatureViewer;

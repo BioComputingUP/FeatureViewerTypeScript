@@ -86,7 +86,7 @@ class Commons {
     public extent: any;
     public pathLevel = 0;
     public step: number = 20;
-    public elementHeight: number = Math.floor(this.step / 1.2);
+    public elementHeight: number = Math.floor(this.step / 1.5);
     public YPosition: number = this.step;
     public scaling: any;
     public lineGen: any;

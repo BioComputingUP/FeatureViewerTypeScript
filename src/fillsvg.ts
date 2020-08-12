@@ -1,8 +1,6 @@
 import ComputingFunctions from "./helper";
 import Calculate from "./calculate";
-
 import * as d3 from './custom-d3';
-import {event as currentEvent} from "d3-selection";
 
 class PreComputing {
 
@@ -45,12 +43,15 @@ class PreComputing {
     };
 
     public preComputingLine(object) {
+        const yScores = object.data[0].map(o => o.y);
+        const maxScore = Math.max(...yScores);
+        const minScore = Math.min(...yScores);
 
-        if (!object.height) { object.height = this.commons.step / 2 };
+        if (!object.height) { object.height = this.commons.step / 2 }
         let shift = parseInt(object.height);
         let level = 0;
 
-        for (let i in object.data) {
+        for (const i of object.data.keys()) {
             object.data[i].sort((a, b) => {
                 return a.x - b.x;
             });
@@ -73,6 +74,7 @@ class PreComputing {
             }));
             // overwrite this value if given option ymax
             if ('yLim' in object) {
+                // maxValue = maxScore
                 maxValue = object['yLim'];
             }
             level = maxValue > level ? maxValue : level;
@@ -93,7 +95,8 @@ class PreComputing {
             ]
         }
 
-        this.commons.lineYScale.range([0, -(shift)]).domain([0, -(level)]);
+        // this.commons.lineYScale.range([0, -(shift)]).domain([0, -(level)]);
+        this.commons.lineYScale.range([minScore, maxScore]).domain([0, this.commons.step/50]);
 
         object.pathLevel = shift * 10 + 5;
         object.level = level;
@@ -202,40 +205,42 @@ class FillSVG extends ComputingFunctions {
         else return "#" + (0x100000000 + (f[3] > -1 && t[3] > -1 ? r(((t[3] - f[3]) * p + f[3]) * 255) : t[3] > -1 ? r(t[3] * 255) : f[3] > -1 ? r(f[3] * 255) : 255) * 0x1000000 + r((t[0] - f[0]) * p + f[0]) * 0x10000 + r((t[1] - f[1]) * p + f[1]) * 0x100 + r((t[2] - f[2]) * p + f[2])).toString(16).slice(f[3] > -1 || t[3] > -1 ? 1 : 3);
     }
 
-    public typeIdentifier(object) {
-
+    public typeIdentifier(feature) {
         let thisYPosition;
-        if (object.type === "curve") {
-            if (!object.height) { object.height = 10 }
-            let shift = parseInt(object.height);
-            thisYPosition = this.commons.YPosition + shift * 10 - 4 ;
+        if (feature.type === "curve") {
+            if (!feature.height) { feature.height = 10 }
+            let shift = parseInt(feature.height);
+
+            thisYPosition = this.commons.YPosition //+ shift * 10  ;
         } else {
             thisYPosition = this.commons.YPosition;
         }
 
-        this.tagArea(object, thisYPosition);
+        this.tagArea(feature, thisYPosition);
         // yData is data for flags, this.rectangle etc. draw the actual objects
 
         this.commons.yData.push({
-            hasSubFeatures: object.subfeatures ? true: false,
-            tooltip: object.tooltip,
-            label: object.label,
-            id: object.id,
+            hasSubFeatures: feature.subfeatures ? true: false,
+            tooltip: feature.tooltip,
+            label: feature.label,
+            id: feature.id,
             y: thisYPosition,
-            flagColor: object.flagColor,
-            flagLevel: object.flagLevel,
-            isOpen: object.isOpen,
-            ladderColor: object.ladderColor? object.ladderColor : null,
-            ladderLabel: object.ladderLabel? object.ladderLabel : null
+            flagColor: feature.flagColor,
+            flagLevel: feature.flagLevel,
+            isOpen: feature.isOpen,
+            ladderColor: feature.ladderColor? feature.ladderColor : null,
+            ladderLabel: feature.ladderLabel? feature.ladderLabel : null,
+            yMin: feature.yMin? feature.yMin : null,
+            yMax: feature.yMax? feature.yMax : null
         });
 
-        if (object.type === "rect") {
+        if (feature.type === "rect") {
 
-            this.preComputing.multipleRect(object);
-            this.rectangle(object, this.commons.YPosition);
+            this.preComputing.multipleRect(feature);
+            this.rectangle(feature, this.commons.YPosition);
 
         }
-        else if (object.type === "text") {
+        else if (feature.type === "text") {
 
             this.commons.scaling.range([5, this.commons.viewerOptions.width - 5]);
             let seq = this.displaySequence(this.commons.current_extend.length);
@@ -243,62 +248,63 @@ class FillSVG extends ComputingFunctions {
                 this.sequenceLine();
             }
             else if (seq === true) {
-                this.sequence(object.data, this.commons.YPosition);
+                this.sequence(feature.data, this.commons.YPosition);
             }
             //fillSVG.sequence(object.data, YPosition);
 
         }
-        else if (object.type === "unique") {
+        else if (feature.type === "unique") {
 
-            this.unique(object, this.commons.YPosition);
+            this.unique(feature, this.commons.YPosition);
             // this.commons.YPosition += 5;
 
         }
-        else if (object.type === "circle") {
+        else if (feature.type === "circle") {
 
-            this.circle(object, this.commons.YPosition);
+            this.circle(feature, this.commons.YPosition);
             // this.commons.YPosition += 5;
 
         }
-        else if (object.type === "multipleRect") {
+        else if (feature.type === "multipleRect") {
 
-            this.preComputing.multipleRect(object);
-            this.multipleRect(object, this.commons.YPosition, this.commons.level);
+            this.preComputing.multipleRect(feature);
+            this.multipleRect(feature, this.commons.YPosition, this.commons.level);
             this.commons.YPosition += (this.commons.level - 1) * 10;
 
         }
-        else if (object.type === "path") {
+        else if (feature.type === "path") {
 
             // this type of object overwrites object data, after fillSVG go back to original
-            this.storeData = object.data;
-            this.preComputing.path(object);
-            this.path(object, this.commons.YPosition - 8);
-            object.data = this.storeData;
+            this.storeData = feature.data;
+            this.preComputing.path(feature);
+            this.path(feature, this.commons.YPosition - 8);
+            feature.data = this.storeData;
             // this.commons.YPosition += this.commons.pathLevel;
 
         }
-        else if (object.type === "curve") {
+        else if (feature.type === "curve") {
 
             // this type of object overwrites object data, after fillSVG go back to original
-            this.storeData = object.data;
-            if (!(Array.isArray(object.data[0]))) object.data = [object.data];
-            if (!(Array.isArray(object.color))) object.color = [object.color];
+            this.storeData = feature.data;
+            if (!(Array.isArray(feature.data[0]))) feature.data = [feature.data];
+            if (!(Array.isArray(feature.color))) feature.color = [feature.color];
             let negativeNumbers = false;
-            object.data.forEach((d) => {
+            feature.data.forEach((d) => {
                 if (d.filter((l) => {
                         return l.y < 0
                     }).length) negativeNumbers = true;
             });
-            this.preComputing.preComputingLine(object);
+            this.preComputing.preComputingLine(feature);
 
-            this.fillSVGLine(object, this.commons.YPosition);
-            object.data = this.storeData;
-            this.commons.YPosition += object.pathLevel;
-            this.commons.YPosition += negativeNumbers ? object.pathLevel - 5 : 0;
+            this.fillSVGLine(feature, this.commons.YPosition);
+            feature.data = this.storeData;
+            console.log(this.commons.step, feature.pathLevel)
+            this.commons.YPosition += 7 // this.commons.step // feature.pathLevel;
+            // this.commons.YPosition += negativeNumbers ? feature.pathLevel - 5 : 0;
 
         }
-        else if (object.type === "lollipop") {
-            this.lollipop(object, this.commons.YPosition);
+        else if (feature.type === "lollipop") {
+            this.lollipop(feature, this.commons.YPosition);
             // this.commons.YPosition += 5;
         }
     }
@@ -438,8 +444,7 @@ class FillSVG extends ComputingFunctions {
             .attr("text-anchor", "middle")
             .attr("x", (d, i) => {
                 // index starts from 0
-                let position =  this.commons.scaling.range([2, this.commons.viewerOptions.width - 2])(i + start)
-                return position
+                return this.commons.scaling.range([2, this.commons.viewerOptions.width - 2])(i + start)
             })
             .attr("y", this.commons.step)
             .attr("font-size", "12px")
@@ -928,7 +933,6 @@ class FillSVG extends ComputingFunctions {
     }
 
     public fillSVGLine(object, position = 0) {
-
         // if (!object.interpolation) object.interpolation = "curveBasis"; // TODO: not sensitive to interpolation now
         if (object.fill === undefined) object.fill = true;
         let histoG = this.commons.svgContainer.append("g")

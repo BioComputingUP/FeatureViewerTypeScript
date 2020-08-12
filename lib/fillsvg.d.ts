@@ -7,7 +7,7 @@ declare class FillSVG extends ComputingFunctions {
     private isLight;
     private sbcRip;
     private shadeBlendConvert;
-    typeIdentifier(object: any): void;
+    typeIdentifier(feature: any): void;
     tagArea(object: any, thisYPosition: any): void;
     sequence(seq: any, start?: number): void;
     sequenceLine(): void;

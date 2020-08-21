@@ -1248,7 +1248,6 @@ class FeatureViewer {
     }
 
     public clickFlag(d) {
-
         if (d) {
             // remove selected features
             if (this.commons.featureSelected) {

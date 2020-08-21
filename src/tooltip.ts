@@ -23,18 +23,14 @@ class Tool extends Calculate {
                 let currentContainer = this.commons.svgContainer.node().getBoundingClientRect();
 
                 let selectRect;
-                if (d3.select(`#${divId}`).select(".selectionRect").node()) {
-                    selectRect = d3.select(`#${divId}`).select(".selectionRect")
-                } else {
-                    selectRect = this.commons.svgContainer
-                        .select(".brush")
-                        .append("rect")
-                        .attr("class", "selectionRect box-shadow")
-                        // add shadow?
-                        .attr("height", currentContainer.height)
-                }
+                d3.select(`#${divId}`).selectAll(".selectionRect").remove();
+                selectRect = this.commons.svgContainer
+                    .select(".brush")
+                    .append("rect")
+                    .attr("class", "selectionRect box-shadow")
+                    // add shadow?
+                    .attr("height", currentContainer.height)
                 let thisy = this.getTransf((<HTMLElement>thisfeat.node()).parentElement)[0];
-
                 let myd3node = thisfeat.node();
                 let bcr = (<HTMLElement>myd3node).getBoundingClientRect().width;
                 selectRect
@@ -429,7 +425,7 @@ class Tool extends Calculate {
                             if (object.type === "curve") {
                                 elemHover = updateLineTooltipFunction(absoluteMousePos[0], pD, scalingFunction, labelTrackWidth);
                                 forSelection = elemHover;
-                            };
+                            }
 
                             // path is array of pD, line is elemHover, all the rest is a pD object
                             object['selectedRegion'] = forSelection;

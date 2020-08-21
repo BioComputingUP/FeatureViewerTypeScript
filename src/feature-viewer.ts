@@ -23,6 +23,7 @@ class FeatureViewer {
     private fillSVG: FillSVG;
     private calculate: Calculate;
     private tool: Tool;
+    private lastHighlight: any;
 
     private parseUserOptions(options: UserOptions): void {
 
@@ -342,6 +343,16 @@ class FeatureViewer {
             .style('text-anchor', 'middle')
     }
 
+    private applyLastHighlight() {
+        if (this.lastHighlight) {
+            if (this.lastHighlight.type === 'single') {
+                this.highlightPosition(this.lastHighlight.selection);
+            } else if (this.lastHighlight.type === 'multi') {
+                this.highlightPositions(this.lastHighlight.selection);
+            }
+        }
+    }
+
     // Brush, defines responsive area
     private brushend() {
 
@@ -358,7 +369,8 @@ class FeatureViewer {
             this.commons.featureSelected = null;
         }
         // remove selection rectangle
-        d3.select(`#${this.divId}`).select(".selectionRect").remove();
+        this.resetHighlight(false);
+        this.applyLastHighlight();
 
         if (currentEvent.sourceEvent !== null && typeof currentEvent.sourceEvent.target !== "function") {
             // ZOOMING CASE & REZISING FOR BUTTONS (deprecated)
@@ -1113,7 +1125,7 @@ class FeatureViewer {
         this.fillSVG.showHelp()
     }
 
-    public resetHighlight() {
+    public resetHighlight(resetLastHighlight=true) {
         // empty custom tooltip in reset
         this.resetTooltip(this.commons.customTooltipDiv);
         this.resetTooltip(this.commons.tooltipDiv);
@@ -1124,7 +1136,11 @@ class FeatureViewer {
             this.commons.featureSelected = null;
         }
         // remove selection rectangle
-        d3.select(`#${this.divId}`).select(".selectionRect").remove();
+        d3.select(`#${this.divId}`).selectAll(".selectionRect").remove();
+
+        if (resetLastHighlight === true) {
+            this.lastHighlight = null;
+        }
     }
 
     public resetZoom() {
@@ -1364,36 +1380,45 @@ class FeatureViewer {
             let regionid = "f_" + featureid + '_' + region.x + '-' + region.y;
             this.tool.colorSelectedFeat(regionid, feature, this.commons.divId);
         } else { this.commons.logger.warn("Selected feature id does not exist!") }
+
     };
 
-    public highlightPosition(object) {
-        this.resetHighlight();
-        let start = this.commons.scaling(object.start);
-        let end = this.commons.scaling(object.end);
+    public highlightPosition(region, reset=true) {
+        if (reset === true) {
+            this.resetHighlight();
+        }
+        let start = this.commons.scaling(region.start);
+        let end = this.commons.scaling(region.end);
         // remove selection rectangle if already there
         let selectRect;
-        if (d3.select(`#${this.commons.divId}`).select(".selectionRect").node()) {
-            selectRect = d3.select(`#${this.commons.divId}`).select(".selectionRect")
-        } else {
-            // color the background
-            if (this.commons.svgContainer.node()) {
-                let currentContainer = this.commons.svgContainer.node().getBoundingClientRect();
-                // create
-                selectRect = this.commons.svgContainer
-                    .select(".brush")
-                    .append("rect")
-                    .attr("class", "selectionRect box-shadow")
-                    // add shadow?
-                    .attr("height", currentContainer.height)
-                // place
-                selectRect
-                    .style("display", "block") // remove display none
-                    .attr("width", end-start) // - shift from the beginning
-                    .attr("transform", () => {
-                        return "translate(" + start + ",0)"
-                    })
-            }
+        // color the background
+        if (this.commons.svgContainer.node()) {
+            let currentContainer = this.commons.svgContainer.node().getBoundingClientRect();
+            // create
+            selectRect = this.commons.svgContainer
+                .select(".brush")
+                .append("rect")
+                .attr("class", "selectionRect box-shadow")
+                // add shadow?
+                .attr("height", currentContainer.height)
+            // place
+            selectRect
+                .style("display", "block") // remove display none
+                .attr("width", end - start) // - shift from the beginning
+                .attr("transform", () => {
+                    return "translate(" + start + ",0)"
+                })
         }
+        this.lastHighlight = {type: 'single', selection: region}
+    }
+
+    public highlightPositions(regions) {
+        this.resetHighlight();
+
+        for (const region of regions) {
+            this.highlightPosition(region, false);
+        }
+        this.lastHighlight = {type: 'multi', selection: regions}
     }
 
     private recursiveClick(f, condition) {

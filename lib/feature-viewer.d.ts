@@ -8,9 +8,11 @@ declare class FeatureViewer {
     private fillSVG;
     private calculate;
     private tool;
+    private lastHighlight;
     private parseUserOptions;
     private addYAxis;
     private updateYAxis;
+    private applyLastHighlight;
     private brushend;
     private resizeForMobile;
     private calcFlagWidth;
@@ -26,7 +28,7 @@ declare class FeatureViewer {
     getCurrentPosition(): number;
     getCurrentZoom(): number;
     showHelp(): void;
-    resetHighlight(): void;
+    resetHighlight(resetLastHighlight?: boolean): void;
     resetZoom(): void;
     resetAll(): void;
     downloadJpeg(): void;
@@ -35,7 +37,8 @@ declare class FeatureViewer {
     emptyFeatures(): any;
     flagLoading(id: any): void;
     highlightRegion(region: any, featureid: any): void;
-    highlightPosition(object: any): void;
+    highlightPosition(region: any, reset?: boolean): void;
+    highlightPositions(regions: any): void;
     private recursiveClick;
     collapseAll(): void;
     expandAll(): void;

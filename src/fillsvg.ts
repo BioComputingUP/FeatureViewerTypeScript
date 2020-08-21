@@ -298,7 +298,6 @@ class FillSVG extends ComputingFunctions {
 
             this.fillSVGLine(feature, this.commons.YPosition);
             feature.data = this.storeData;
-            console.log(this.commons.step, feature.pathLevel)
             this.commons.YPosition += 7 // this.commons.step // feature.pathLevel;
             // this.commons.YPosition += negativeNumbers ? feature.pathLevel - 5 : 0;
 

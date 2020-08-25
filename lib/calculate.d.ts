@@ -14,7 +14,7 @@ declare class Calculate {
         ids: any;
     };
     flatten(features: any, flatted?: any[], parent?: any): any[];
-    displaySequence: (seq: any) => boolean;
+    displaySequence(seq: any): boolean;
     updateSVGHeight(position: any): void;
     constructor(commons: {});
 }

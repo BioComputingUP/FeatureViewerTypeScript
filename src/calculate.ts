@@ -152,7 +152,7 @@ class Calculate {
         return flatted
     }
 
-    public displaySequence = function (seq) {
+    public displaySequence (seq) {
         // checks if dotted sequence or letters
         return this.commons.viewerOptions.width / seq > 5;
     };

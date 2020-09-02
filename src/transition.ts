@@ -143,11 +143,11 @@ export class Transition extends ComputingFunctions {
             .attr("x2", (d) => {
                 return this.commons.scaling(d.x)
             })
-            .attr("y2", (d) => {
-                let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
-                if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
-                return w + 4;
-            });
+            // .attr("y2", (d) => {
+            //     let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
+            //     if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
+            //     return w + 4;
+            // });
 
     }
 

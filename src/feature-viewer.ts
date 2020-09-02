@@ -13,6 +13,7 @@ import Tool from "./tooltip";
 // import * as fvstyles from './../assets/fv.scss';
 
 
+
 class FeatureViewer {
     private commons: Commons;
     private divId: string;
@@ -1386,8 +1387,8 @@ class FeatureViewer {
         if (reset === true) {
             this.resetHighlight();
         }
-        let start = this.commons.scaling(region.start);
-        let end = this.commons.scaling(region.end);
+        let start = this.commons.scaling(region.start - .5);
+        let end = this.commons.scaling(region.end + .5);
         // remove selection rectangle if already there
         let selectRect;
         // color the background

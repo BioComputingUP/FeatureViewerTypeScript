@@ -303,8 +303,9 @@ class FillSVG extends ComputingFunctions {
 
         }
         else if (feature.type === "lollipop") {
+            this.commons.YPosition += 7;
             this.lollipop(feature, this.commons.YPosition);
-            // this.commons.YPosition += 5;
+
         }
     }
 
@@ -705,9 +706,11 @@ class FillSVG extends ComputingFunctions {
             .enter()
             .append("path")
             .attr("d", this.commons.line)
-            .attr("class", "line " + object.className)
+            .attr("class", () => {
+                return "line " + object.className
+            })
             .style("z-index", "0")
-            .style("stroke", 'grey')
+            .style("stroke", 'gray')
             .style("stroke-width", "0.5px");
 
         let readyData = [...object.data];

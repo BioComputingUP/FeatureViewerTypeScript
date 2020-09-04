@@ -336,7 +336,7 @@ class FeatureViewer {
                 const y = (d.y + this.commons.step);
                 return "translate(" + x + "," + y + ")"
             })
-            .text(([i, d]) => (d.ladderLabel === 'F' || i<d.flagLevel-1)? '': d.ladderLabel)
+            .text(([i, d]) => i<d.flagLevel-1? '': d.ladderLabel)
             .attr('font-size', '.8125rem')
             .attr('fill', 'black')
             .attr('font-weight', 'bold')

@@ -13,7 +13,6 @@ import Tool from "./tooltip";
 // import * as fvstyles from './../assets/fv.scss';
 
 
-
 class FeatureViewer {
     private commons: Commons;
     private divId: string;
@@ -171,7 +170,6 @@ class FeatureViewer {
             .attr("fill", this.commons.backgroundcolor)
             .attr("fill-opacity", 1);
         this.updateYAxis();
-
     };
 
     private updateYAxis() {
@@ -183,11 +181,7 @@ class FeatureViewer {
             .append("g")
             .attr("id", function (d) {
                 // return divId + '_' + d.title.split(" ").join("_") + '_g'
-                if (d.title === "Sequence") {
-                    return 'sequence'
-                } else {
-                    return d.id
-                }
+                return d.id
             })
             .attr("class", (d) => {
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
@@ -213,37 +207,37 @@ class FeatureViewer {
             .call(this.commons.d3helper.flagTooltip());
 
         // create polygon
-        // this.commons.yAxisSVGGroup
-        //     .append("rect") // attach a polygon
-        //     .attr("class", (d) => {
-        //         if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-        //             return "boxshadow Arrow withsubfeatures"
-        //         } else { return "boxshadow Arrow" }
-        //     })
-        //     .style("stroke", (d) => {
-        //         return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
-        //     }) // colour the border if selected
-        //     // .attr("points", (d) => {
-        //     //     // match points with subFeature level
-        //     //     let polypoints = this.calculate.yxPoints(d)
-        //     //     return polypoints
-        //     // })
-        //     .attr("transform", d => "translate(" + 20 + ",0)") // (20 * (d.flagLevel - 1))
-        //     .style("fill", (d) => {
-        //         return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
-        //     });
+        this.commons.yAxisSVGGroup
+            .append("polygon") // attach a polygon
+            .attr("class", (d) => {
+                if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
+                    return "boxshadow Arrow withsubfeatures"
+                } else { return "boxshadow Arrow" }
+            })
+            .style("stroke", (d) => {
+                return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
+            }) // colour the border if selected
+            .attr("points", (d) => {
+                // match points with subFeature level
+                let polypoints = this.calculate.yxPoints(d)
+                return polypoints
+            })
+            .attr("transform", d => "translate(" + (20 * (d.flagLevel - 1))  + ",0)")
+            .style("fill", (d) => {
+                return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
+            });
 
         // foreingObject for chevron
-        /*this.commons.yAxisSVGGroup
+        this.commons.yAxisSVGGroup
             .append("g") // position
             .attr("transform", (d) => {
                 let x = 0;
                 // horizontal flag placement
-                this.commons.headMargin = 20;
-                // if (d.flagLevel) {
-                //     this.commons.headMargin = 20 * (d.flagLevel - 1);
-                //     x = this.commons.headMargin + 5;
-                // }
+                this.commons.headMargin = 0;
+                if (d.flagLevel) {
+                    this.commons.headMargin = 20 * (d.flagLevel - 1);
+                    x = this.commons.headMargin + 5;
+                }
                 // vertical flag placement
                 let y = d.y - 4;
                 return "translate(" + x + "," + y + ")"
@@ -258,11 +252,11 @@ class FeatureViewer {
             .attr("fill", "rgba(39, 37, 37, 0.71)")
             .attr("d", (d) => {
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                    // if (d.isOpen) {return this.commons.down_chevron} else {return this.commons.right_chevron}
+                    if (d.isOpen) {return this.commons.down_chevron} else {return this.commons.right_chevron}
                 } else {
                     return ''
                 }
-            });*/
+            });
 
         // text
         this.commons.yAxisSVGGroup
@@ -280,68 +274,68 @@ class FeatureViewer {
                     cvm = 17
                 }
                 // horizontal flag placement
-                this.commons.headMargin = 20;
-                // if (d.flagLevel) {
-                //     this.commons.headMargin = 20 * (d.flagLevel - 1);
-                //     return cvm + this.commons.headMargin + 8;
-                // } else {
-                //     return cvm + 8
-                // }
+                this.commons.headMargin = 0;
+                if (d.flagLevel) {
+                    this.commons.headMargin = 20 * (d.flagLevel - 1);
+                    return cvm + this.commons.headMargin + 8;
+                } else {
+                    return cvm + 8
+                }
             })
-            .attr("y", d => {
+            .attr("y", function (d) {
                 // vertical flag placement
-                return d.y + this.commons.step/6
+                return d.y
             })
-            .attr('font-size', '.8125rem')
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
                     return this.calcFlagWidth(d);
                 } else {
-                    let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth  // 20 + (20 * d.flagLevel) --> 0
+                    let margin = 20 + (20 * d.flagLevel)
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
             })
-            .attr("height", this.commons.step)
+            .attr("height", this.commons.step - 11)
             .html((d) => {
                 return d.label;
             });
 
-        const ladderGroup = this.commons.yAxisSVGGroup
-            .selectAll('.ladder')
-            .data((e) => {
-                return [...Array(e.flagLevel)].map((obj, x) => [x, e])
-            })
-            .enter()
-            .append('g')
-
-        ladderGroup.append('rect')
-            .attr('transform', ([i, d]) => {
-                const margin = (this.commons.viewerOptions.margin.left + (i-1)*this.commons.viewerOptions.ladderSpacing);
-                const ladderWidth = this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth;
-                const x = margin - ladderWidth;
-                const y = (d.y + this.commons.step/6);
-                return "translate(" + x + "," + y + ")"
-            })
-            .attr('width', this.commons.viewerOptions.ladderWidth).attr('height', this.commons.viewerOptions.ladderHeight)
-            .attr('fill', ([i, d]) => {
-                return  (d.id !== 'fv_sequence' && i===d.flagLevel-1) ? d.ladderColor : 'rgba(255, 255, 255, 0)'
-            })
-            .attr('class', d => `ladder`)
-        ladderGroup.append('text')
-            .attr('transform', ([i, d]) => {
-                const margin = (this.commons.viewerOptions.margin.left + (i-1)*this.commons.viewerOptions.ladderSpacing);
-                const ladderWidth = this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth;
-                const x = margin - ladderWidth + this.commons.viewerOptions.ladderWidth/2;
-                const y = (d.y + this.commons.step);
-                return "translate(" + x + "," + y + ")"
-            })
-            .text(([i, d]) => i<d.flagLevel-1? '': d.ladderLabel)
-            .attr('font-size', '.8125rem')
-            .attr('fill', 'black')
-            .attr('font-weight', 'bold')
-            .style('alignment-baseline', 'after-edge')
-            .style('text-anchor', 'middle')
+        // Adds ladder tags, feature required in MobiDB
+        // const ladderGroup = this.commons.yAxisSVGGroup
+        //     .selectAll('.ladder')
+        //     .data((e) => {
+        //         return [...Array(e.flagLevel)].map((obj, x) => [x, e])
+        //     })
+        //     .enter()
+        //     .append('g')
+        //
+        // ladderGroup.append('rect')
+        //     .attr('transform', ([i, d]) => {
+        //         const margin = (this.commons.viewerOptions.margin.left + (i-1)*this.commons.viewerOptions.ladderSpacing);
+        //         const ladderWidth = this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth;
+        //         const x = margin - ladderWidth;
+        //         const y = (d.y + this.commons.step/6);
+        //         return "translate(" + x + "," + y + ")"
+        //     })
+        //     .attr('width', this.commons.viewerOptions.ladderWidth).attr('height', this.commons.viewerOptions.ladderHeight)
+        //     .attr('fill', ([i, d]) => {
+        //         return  (d.id !== 'fv_sequence' && i===d.flagLevel-1) ? d.ladderColor : 'rgba(255, 255, 255, 0)'
+        //     })
+        //     .attr('class', d => `ladder`)
+        // ladderGroup.append('text')
+        //     .attr('transform', ([i, d]) => {
+        //         const margin = (this.commons.viewerOptions.margin.left + (i-1)*this.commons.viewerOptions.ladderSpacing);
+        //         const ladderWidth = this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth;
+        //         const x = margin - ladderWidth + this.commons.viewerOptions.ladderWidth/2;
+        //         const y = (d.y + this.commons.step);
+        //         return "translate(" + x + "," + y + ")"
+        //     })
+        //     .text(([i, d]) => i<d.flagLevel-1? '': d.ladderLabel)
+        //     .attr('font-size', '.8125rem')
+        //     .attr('fill', 'black')
+        //     .attr('font-weight', 'bold')
+        //     .style('alignment-baseline', 'after-edge')
+        //     .style('text-anchor', 'middle')
     }
 
     private applyLastHighlight() {
@@ -499,6 +493,16 @@ class FeatureViewer {
         }
     }
 
+    private updateSequenceView (seq) {
+        if (this.commons.viewerOptions.showSequence) {
+            if (seq === false) {
+                this.fillSVG.sequenceLine();
+            } else if (seq === true) {
+                this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
+            }
+        }
+    }
+
     private updateWindow() {
         // change width now
         if (d3.select(`#${this.divId}`).node() !== null) {
@@ -551,14 +555,8 @@ class FeatureViewer {
 
         // update seq visualization
         let seq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
-        this.commons.svgContainer.select(".mySequence").remove();
-        if (this.commons.viewerOptions.showSequence) {
-            if (seq === false) {
-                this.fillSVG.sequenceLine();
-            } else if (seq === true) {
-                this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
-            }
-        }
+        this.updateSequenceView(seq)
+
         if (this.commons.animation) {
             // @ts-ignore
             d3.select(`#${this.commons.divId}`).select('#tags_container').transition().duration(500)
@@ -927,27 +925,8 @@ class FeatureViewer {
             else {
                 this.fillSVG.sequenceLine();
             }
-            // check if sequence already initialized, alse add it to yData
-            // if (this.commons.yData.filter((e) => {e.id === 'fv_sequence'}).length === 0) {
-            //     // features
-            //     // this.commons.features.push({
-            //     //     data: this.sequence,
-            //     //     label: "Sequence",
-            //     //     className: "AA",
-            //     //     color: "black",
-            //     //     type: "sequence",
-            //     //     id: "fv_sequence"
-            //     // });
-            //     // yData
-            //     this.commons.yData.push({
-            //         id: "fv_sequence",
-            //         label: "Sequence",
-            //         y: this.commons.YPosition - 8,
-            //         flagLevel: 1
-            //     });
-            // }
             this.commons.yData.push({
-                id: "fv_sequence",
+                id: "sequence",
                 label: "Sequence",
                 y: this.commons.YPosition - 8,
                 flagLevel: 1
@@ -961,19 +940,13 @@ class FeatureViewer {
             // this.commons.viewerOptions.brushActive = true;
             this.fillSVG.addBrush();
         }
-        /* feature removed
-        if (this.commons.viewerOptions.verticalLine) {
-            // this.commons.viewerOptions.verticalLine = true;
-            this.addVerticalLine();
-        }
-        */
 
         this.calculate.updateSVGHeight(this.commons.YPosition);
 
         // listen to resizing
         window.addEventListener("resize", () => {
-            this.updateWindow()
-        }); // window.addEventListener works, but iupdateWindow needs to access to internal commons
+            this.updateWindow();
+        });
     }
 
     // interact with features
@@ -1017,9 +990,7 @@ class FeatureViewer {
         this.fillSVG.typeIdentifier(object);
         // flags
         this.updateYAxis();
-        if (object.type === "curve" || object.type === "path") {
-            // this.updateWindow();
-        }
+        this.updateWindow();
     }
 
     private drawFeatures() {
@@ -1157,14 +1128,8 @@ class FeatureViewer {
         // remove sequence
         this.commons.svgContainer.select(".mySequence").remove();
         // draw sequence
-        if (this.commons.viewerOptions.showSequence) {
-            if (seq === false) {
-                this.fillSVG.sequenceLine();
-            }
-            else if (seq === true) {
-                this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
-            }
-        }
+        this.updateSequenceView(true)
+
         this.commons.current_extend = {
             length: this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start,
             start: this.commons.viewerOptions.offset.start,

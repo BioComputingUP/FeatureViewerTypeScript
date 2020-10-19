@@ -4,8 +4,6 @@ import * as d3 from './custom-d3';
 
 class Tool extends Calculate {
 
-    private calculate: Calculate;
-
     public colorSelectedFeat(feat, object, divId) {
         // remove previous selected features
         if (this.commons.featureSelected) {
@@ -42,10 +40,6 @@ class Tool extends Calculate {
             }
         }
     };
-
-    public colorSelectedCoordinates(start, end, divId) {
-
-    }
 
     private updateLineTooltip(mouse, pD, scalingFunction, labelTrackWidth) {
         let xP = mouse - labelTrackWidth;
@@ -116,31 +110,6 @@ class Tool extends Calculate {
             return tooltip_message
         };
 
-        let drawTooltip = (tooltipDiv, absoluteMousePos) => {
-            // angular material tooltip
-            tooltipDiv
-                .style('top', (absoluteMousePos[1] - 55) + 'px')
-                .style("display", "block")
-                .style('background-color', 'grey')
-                .style('color', "#fff")
-                .style('width', 'auto')
-                .style('max-width', '170px')
-                .style("height", "auto")
-                .style('cursor', 'help')
-                .style('pointer-events', 'none')
-                .style('borderRadius', '2px')
-                .style('overflow', 'hidden')
-                .style('whiteSpace', 'nowrap')
-                .style('textOverflow', 'ellipsis')
-                .style('padding', '8px')
-                .style('font', '10px sans-serif')
-                .style('text-align', 'center')
-                .style('position', 'absolute') // don't change this for compatibility to angular2
-                .style('z-index', 45)
-                .style('box-shadow', '0 1px 2px 0 #656565')
-                .style('fontWeight', '500');
-        };
-
         let scalingFunction = this.commons.scaling;
         let labelTrackWidth = this.commons.viewerOptions.labelTrackWidth;
         let updateLineTooltipFunction = this.updateLineTooltip;
@@ -165,34 +134,30 @@ class Tool extends Calculate {
                     top = absoluteMousePos[1].toString();
 
                     // mobilemode labels overwrite tooltips
-                    if (this.commons.viewerOptions.mobileMode) {
-                        tooltipDiv.transition()
-                            .duration(200)
-                            .style("opacity", 1);
-                        tooltipDiv
-                            .html(pD['label'] || pD['id'])
-                            .style("left", left+'px')
-                            .style("top", top+'px');
-                    } else if ('tooltip' in pD && pD['tooltip']) {
-                        tooltipDiv.transition()
-                            .duration(200)
-                            .style("opacity", 1);
-                        tooltipDiv
-                            .html(pD['tooltip'])
-                            .style("left", left+'px')
-                            .style("top", top+'px');
-                    }
+                    tooltipDiv.transition()
+                        .duration(200)
+                        .style("opacity", 1);
+                    tooltipDiv
+                        .html((pD) => {
+                            if (this.commons.viewerOptions.mobileMode) {
+                                return pD['label'] || pD['id']
+                            } else {
+                                return pD['tooltip']
+                            }
+                        })
+                        .style("left", left+'px')
+                        .style("top", top+'px');
                 };
 
                 selection
                 // tooltip
                     .on('mouseover.tooltip', (pD) => {
-                        if (this.commons.viewerOptions.mobileMode) {
+                        if (this.commons.viewerOptions.mobileMode || ('tooltip' in pD && pD['tooltip'])) {
                             drawMyTooltip(pD);
                         }
                     })
                     .on('mousemove.tooltip', (pD) => {
-                        if (this.commons.viewerOptions.mobileMode) {
+                        if (this.commons.viewerOptions.mobileMode || ('tooltip' in pD && pD['tooltip'])) {
                             drawMyTooltip(pD);
                         }
                     })

@@ -115,8 +115,8 @@ class Tool extends Calculate {
         let updateLineTooltipFunction = this.updateLineTooltip;
 
         this.commons.d3helper = {};
-        // d3['helper'] = {};
 
+        // label tooltip
         this.commons.d3helper.flagTooltip = () => {
 
             let tooltipDiv = this.commons.tooltipDiv;
@@ -125,40 +125,38 @@ class Tool extends Calculate {
             let tooltip = (selection) => {
 
                 let absoluteMousePos;
-                let drawMyTooltip = (pD) => {
-
+                let drawMyTooltip = (content) => {
                     absoluteMousePos = d3.mouse(bodyNode);
-
                     let left, top;
                     left = absoluteMousePos[0].toString();
                     top = absoluteMousePos[1].toString();
-
                     // mobilemode labels overwrite tooltips
                     tooltipDiv.transition()
                         .duration(200)
                         .style("opacity", 1);
                     tooltipDiv
-                        .html((pD) => {
+                        .html(() => {
                             if (this.commons.viewerOptions.mobileMode) {
-                                return pD['label'] || pD['id']
+                                return content['label'] || content['id']
                             } else {
-                                return pD['tooltip']
+                                return content['tooltip']
                             }
                         })
                         .style("left", left+'px')
                         .style("top", top+'px');
                 };
 
-                selection
-                // tooltip
-                    .on('mouseover.tooltip', (pD) => {
-                        if (this.commons.viewerOptions.mobileMode || ('tooltip' in pD && pD['tooltip'])) {
-                            drawMyTooltip(pD);
+                if (selection) {
+                    selection
+                    // tooltip
+                    .on('mouseover.tooltip', (content) => {
+                        if (this.commons.viewerOptions.mobileMode || ('tooltip' in content && content['tooltip'])) {
+                            drawMyTooltip(content);
                         }
                     })
-                    .on('mousemove.tooltip', (pD) => {
-                        if (this.commons.viewerOptions.mobileMode || ('tooltip' in pD && pD['tooltip'])) {
-                            drawMyTooltip(pD);
+                    .on('mousemove.tooltip', (content) => {
+                        if (this.commons.viewerOptions.mobileMode || ('tooltip' in content && content['tooltip'])) {
+                            drawMyTooltip(content);
                         }
                     })
                     .on('mouseout.tooltip', () => {
@@ -167,12 +165,14 @@ class Tool extends Calculate {
                             .duration(500)
                             .style("opacity", 0);
                     })
+                }
             };
 
             return tooltip;
 
         };
 
+        // tooltip on buttons and objects in right sidebar
         this.commons.d3helper.genericTooltip = (object) => {
 
             let tooltipDiv = this.commons.tooltipDiv;
@@ -226,6 +226,7 @@ class Tool extends Calculate {
 
         };
 
+        // tooltip on features
         this.commons.d3helper.tooltip = (object) => {
 
             let tooltipDiv = this.commons.tooltipDiv;

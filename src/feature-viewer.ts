@@ -161,7 +161,7 @@ class FeatureViewer {
     private addYAxis() {
         // flags box
         this.commons.yAxisSVG = this.commons.svg.append("g")
-            .attr("class", "pro axis")
+            .attr("class", "labels_container")
             .attr("transform", "translate(0," + this.commons.viewerOptions.margin.top + ")");
         this.commons.yAxisSVG.append("rect")
             .attr("width", this.commons.viewerOptions.margin.left)
@@ -169,10 +169,10 @@ class FeatureViewer {
             .attr("height", "100%")
             .attr("fill", this.commons.backgroundcolor)
             .attr("fill-opacity", 1);
-        this.updateYAxis();
     };
 
     private updateYAxis() {
+
         // create g
         this.commons.yAxisSVGGroup = this.commons.yAxisSVG
             .selectAll(".yAxis")
@@ -180,7 +180,6 @@ class FeatureViewer {
             .enter()
             .append("g")
             .attr("id", function (d) {
-                // return divId + '_' + d.title.split(" ").join("_") + '_g'
                 return d.id
             })
             .attr("class", (d) => {
@@ -189,9 +188,6 @@ class FeatureViewer {
                 } else { return "flag" }
             })
             .on('click', (d) => {
-                // if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
-                //     this.clickFlag(d)
-                // }
                 this.clickFlag(d)
             })
             .on('mouseover', (d) => {
@@ -284,7 +280,7 @@ class FeatureViewer {
             })
             .attr("y", function (d) {
                 // vertical flag placement
-                return d.y
+                return d.y - 5; // margin to text
             })
             .attr("width", (d) => {
                 // text only if space is enough
@@ -301,7 +297,7 @@ class FeatureViewer {
             });
 
         // Adds ladder tags, feature required in MobiDB
-        // const ladderGroup = this.commons.yAxisSVGGroup
+        // const ladderGroup = thislabel
         //     .selectAll('.ladder')
         //     .data((e) => {
         //         return [...Array(e.flagLevel)].map((obj, x) => [x, e])
@@ -476,7 +472,6 @@ class FeatureViewer {
             });
         // background containers, update width
         this.commons.svgContainer.attr("transform", "translate(" + (this.commons.viewerOptions.margin.left).toString() + ",12)");
-        // this.commons.tagsContainer.attr("transform","translate(" + (this.commons.viewerOptions.width + this.commons.viewerOptions.margin.left) + "," + this.commons.viewerOptions.margin.top + ")")
     }
 
     private calcFlagWidth(d) {
@@ -493,11 +488,12 @@ class FeatureViewer {
         }
     }
 
-    private updateSequenceView (seq) {
+    private updateSequenceView () {
+        const showfullseq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
         if (this.commons.viewerOptions.showSequence) {
-            if (seq === false) {
+            if (showfullseq === false) {
                 this.fillSVG.sequenceLine();
-            } else if (seq === true) {
+            } else if (showfullseq === true) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
         }
@@ -554,8 +550,7 @@ class FeatureViewer {
         this.commons.scalingPosition.domain([0, this.commons.viewerOptions.width]);
 
         // update seq visualization
-        let seq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
-        this.updateSequenceView(seq)
+        this.updateSequenceView()
 
         if (this.commons.animation) {
             // @ts-ignore
@@ -598,6 +593,187 @@ class FeatureViewer {
             }
         }
     }
+
+    // interact with features
+    private addFeatureCore(object, flagLevel = 1, position = null) {
+        this.commons.YPosition += this.commons.step;
+        // if no label is given, id on flag
+        if (!object.label) {object.label = object.id}
+        // deselect it if no isOpen input
+        if (!object.isOpen) {
+            object.isOpen = false;
+        }
+        if (this.commons.animation) {
+            if (CustomEvent) {
+                let event = new CustomEvent(this.commons.events.ANIMATIONS_FALSE_EVENT, {detail: {}});
+                if (this.commons.svgElement) {
+                    this.commons.svgElement.dispatchEvent(event);
+                }
+            } else {
+                this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
+            }
+            if (this.commons.trigger) this.commons.trigger(this.commons.events.ANIMATIONS_FALSE_EVENT);
+        }
+
+        if (!object.className) {
+            object.className = object.type + "fv";
+        }
+        else {
+            // initialized by user or by viewer?
+            if (object.className !== object.type + "fv") {
+                object.className = object.className + " " + object.type + "fv";
+            }
+        }
+
+        if (!object.color) {
+            object.color = "#DFD5F5";
+        }
+
+        //object.height = this.commons.elementHeight;
+        object.flagLevel = flagLevel;
+
+        this.fillSVG.typeIdentifier(object);
+        // flags, updated at each addfeature iteration
+        this.updateYAxis();
+        this.updateWindow();
+    }
+
+    private drawFeatures() {
+
+        // turn off transitions if more than 100
+        if (this.commons.features.length > 100) {
+            this.commons.animation = false;
+            this.commons.logger.warn("Animation is turned off with more than 100 features", {method:"addFeatureCore", fvId:this.divId, featuresNumber:this.commons.features.length})
+        }
+        for (const ft of this.commons.features) {
+            this.addFeature(ft)
+        }
+
+        this.fillSVG.updateXAxis(this.commons.YPosition);
+        this.calculate.updateSVGHeight(this.commons.YPosition);
+
+        // update brush
+        if (this.commons.viewerOptions.brushActive) {
+            this.fillSVG.resizeBrush()
+        }
+
+    }
+
+    private recursivelyRemove(ft) {
+        // remove subfeatures
+        if (ft.subfeatures) {
+            for (const sft of ft.subfeatures) {
+                this.recursivelyRemove(sft)
+            }
+        }
+        // remove from feature array and from html
+        d3.select(`#t${ft.id}_tagarea`).remove();
+        d3.select(`#c${ft.id}_container`).remove();
+        d3.select(`#${ft.id}`).remove();
+    }
+
+    private recursiveClose (array) {
+        for (const sbt of array) {
+            sbt.isOpen = false
+            if (sbt.subfeatures) {
+                this.recursiveClose(sbt.subfeatures)
+            }
+        }
+    }
+
+    private changeFeature(feature, bool) {
+
+        // freeze viewer
+        this.flagLoading(feature.id);
+        // close or open it
+        feature.isOpen = bool;
+        // if close, reset children status
+        if (!feature.isOpen) {
+            if (feature.subfeatures) {
+                this.recursiveClose(feature.subfeatures)
+            }
+        }
+
+        // overlay if opening many subfeatures
+        if (feature.isOpen) {
+            if (feature.subfeatures.length > 200) {
+                setTimeout(()=>{
+                    // empty features
+                    this.commons.features = this.emptyFeatures()
+                    // redraw features
+                    this.drawFeatures()
+                    // defreeze viewer
+                    this.stopFlagLoading(feature.id)
+                }, 1)
+                return
+            }
+        }
+
+        // empty features
+        this.commons.features = this.emptyFeatures()
+        // redraw features
+        this.drawFeatures()
+        // defreeze viewer
+        this.stopFlagLoading(feature.id)
+
+
+    }
+
+    private resetTooltip(tooltipdiv) {
+        // empty custom tooltip in reset
+        tooltipdiv.transition()
+            .duration(500)
+            .style("opacity", 0);
+        tooltipdiv.html("");
+        tooltipdiv.status = 'closed';
+    }
+
+    private getLevel(f, l) {
+        l++
+        if (f.hasOwnProperty('subfeatures')) {
+            l = this.getLevel(f.subfeatures, l)
+        }
+        return l
+    }
+
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name addFeature
+     * @param {object} object - The input feature
+     * @param {number} flagLevel - The indent level for rendering flag
+     * @property {Array<object>} feature.data
+     * @property {int} feature.data.<Object>.x - first position
+     * @property {int} feature.data.<Object>.y - last position (or a value for features of type "curve")
+     * @property {string} [feature.data.<Object>.id] - id
+     * @property {string} [feature.data.<Object>.description] - description
+     * @property {string} [feature.data.<Object>.color] - color
+     * @property {string} [feature.data.<Object>.tooltip] - message for the region tooltip
+     * @property {string} feature.type -  ("rect","curve","unique","circle") : The type of feature, for a specific rendering
+     * @property {string} [feature.name] - The name of theses features, which will be display as a label on the Y-axis
+     * @property {string} [feature.className] - a class name, for further personal computing
+     * @property {int} [feature.height] - height of the feature
+     * @property {string} [feature.color] - The color of the features
+     * @property {boolean} [feature.hasSubFeatures] - determines if object is clickable and expands for subFeature visualization
+     * @property {string} [feature.filter] - a class filter, for further personal computing
+     * @property {number} [feature.disorderContent] - content of disorder content tag (right side of viewer)
+     * @property {number} [feature.tooltip] - message for the flag tooltip
+     * @property {Array<object>} [feature.links]
+     * @property {string} [feature.links.<Object>.name] - The button name, used to identify click event
+     * @property {string} [feature.links.<Object>.icon]  - Glyphicon code or text, specify glyphicon in unicode format, ex. \ue030
+     * @property {string} [feature.links.<Object>.message] - The message for tooltip
+     * @property {string} [feature.links.<Object>.color] - Optional color for the visualized glyphicon
+     */
+    private addFeature(object: FeatureObject, flagLevel=1) {
+        this.addFeatureCore(object, flagLevel);
+        if (object.subfeatures && object.isOpen) {
+            flagLevel+=1
+            for (const sft of object.subfeatures) {
+                this.addFeature(sft, flagLevel)
+            }
+        } return object.id
+    }
+
     // init viewer
     private init(div) {
 
@@ -670,15 +846,15 @@ class FeatureViewer {
         let tickStep = Math.round(rtickStep/10)*10; // nearest 10th multiple
 
         let tickArray = Array.from(Array(this.commons.fvLength).keys())
-          .filter(function (value, index, ar) {
-            return (index % tickStep == 0 && index !== 0);
-          });
+            .filter(function (value, index, ar) {
+                return (index % tickStep == 0 && index !== 0);
+            });
 
         //Create Axis
         this.commons.xAxis = d3.axisBottom(this.commons.scaling)
             .tickValues(tickArray)
-            //.scale(this.commons.scaling) // TODO
-            //.tickFormat(d3.format("d"));
+        //.scale(this.commons.scaling) // TODO
+        //.tickFormat(d3.format("d"));
 
         let yAxisScale = d3.scaleBand()
             //.domain([0, this.commons.yData.length])
@@ -716,8 +892,8 @@ class FeatureViewer {
             .style("z-index", 1070);
 
         this.commons.style = d3.select(`#${this.divId}`)
-            // .append("style")
-            // .html(`${fvstyles}`)
+        // .append("style")
+        // .html(`${fvstyles}`)
 
 
         // Create SVG
@@ -837,7 +1013,7 @@ class FeatureViewer {
                     .append("path")
                     .attr("d", "M2.93 17.070c-1.884-1.821-3.053-4.37-3.053-7.193 0-5.523 4.477-10 10-10 2.823 0 5.372 1.169 7.19 3.050l0.003 0.003c1.737 1.796 2.807 4.247 2.807 6.947 0 5.523-4.477 10-10 10-2.7 0-5.151-1.070-6.95-2.81l0.003 0.003zM9 11v4h2v-6h-2v2zM9 5v2h2v-2h-2z")
 
-                }
+            }
 
         }
 
@@ -935,6 +1111,8 @@ class FeatureViewer {
 
         this.fillSVG.addXAxis(this.commons.YPosition);
         this.addYAxis();
+        // draw sequence label
+        // this.updateYAxis();
 
         if (this.commons.viewerOptions.brushActive) {
             // this.commons.viewerOptions.brushActive = true;
@@ -948,140 +1126,6 @@ class FeatureViewer {
             this.updateWindow();
         });
     }
-
-    // interact with features
-    private addFeatureCore(object, flagLevel = 1, position = null) {
-        this.commons.YPosition += this.commons.step;
-        // if no label is given, id on flag
-        if (!object.label) {object.label = object.id}
-        // deselect it if no isOpen input
-        if (!object.isOpen) {
-            object.isOpen = false;
-        }
-        if (this.commons.animation) {
-            if (CustomEvent) {
-                let event = new CustomEvent(this.commons.events.ANIMATIONS_FALSE_EVENT, {detail: {}});
-                if (this.commons.svgElement) {
-                    this.commons.svgElement.dispatchEvent(event);
-                }
-            } else {
-                this.commons.logger.warn("CustomEvent is not defined", {fvId:this.divId});
-            }
-            if (this.commons.trigger) this.commons.trigger(this.commons.events.ANIMATIONS_FALSE_EVENT);
-        }
-
-        if (!object.className) {
-            object.className = object.type + "fv";
-        }
-        else {
-            // initialized by user or by viewer?
-            if (object.className !== object.type + "fv") {
-                object.className = object.className + " " + object.type + "fv";
-            }
-        }
-
-        if (!object.color) {
-            object.color = "#DFD5F5";
-        }
-
-        //object.height = this.commons.elementHeight;
-        object.flagLevel = flagLevel;
-
-        this.fillSVG.typeIdentifier(object);
-        // flags
-        this.updateYAxis();
-        this.updateWindow();
-    }
-
-    private drawFeatures() {
-        // turn off features if more than 100
-        if (this.commons.features.length > 100) {
-            this.commons.animation = false;
-            this.commons.logger.warn("Animation is turned off with more than 100 features", {method:"addFeatureCore", fvId:this.divId, featuresNumber:this.commons.features.length})
-        }
-        for (const ft of this.commons.features) {
-            this.addFeature(ft)
-        }
-
-        this.fillSVG.updateXAxis(this.commons.YPosition);
-        this.calculate.updateSVGHeight(this.commons.YPosition);
-
-        // update brush
-        if (this.commons.viewerOptions.brushActive) {
-            this.fillSVG.resizeBrush()
-        }
-
-    }
-
-    private recursivelyRemove(ft) {
-        // remove subfeatures
-        if (ft.subfeatures) {
-            for (const sft of ft.subfeatures) {
-                this.recursivelyRemove(sft)
-            }
-        }
-        // remove from feature array and from html
-        d3.select(`#t${ft.id}_tagarea`).remove();
-        d3.select(`#c${ft.id}_container`).remove();
-        d3.select(`#${ft.id}`).remove();
-    }
-
-    private recursiveClose (array) {
-        for (const sbt of array) {
-            sbt.isOpen = false
-            if (sbt.subfeatures) {
-                this.recursiveClose(sbt.subfeatures)
-            }
-        }
-    }
-
-    private changeFeature(feature, bool) {
-
-        // freeze viewer
-        this.flagLoading(feature.id);
-        // close or open it
-        feature.isOpen = bool;
-        // if close, reset children status
-        if (!feature.isOpen) {
-            if (feature.subfeatures) {
-                this.recursiveClose(feature.subfeatures)
-            }
-        }
-
-        // overlay if opening many subfeatures
-        if (feature.isOpen) {
-            if (feature.subfeatures.length > 200) {
-                setTimeout(()=>{
-                    // empty features
-                    this.commons.features = this.emptyFeatures()
-                    // redraw features
-                    this.drawFeatures()
-                    // defreeze viewer
-                    this.stopFlagLoading(feature.id)
-                }, 1)
-                return
-            }
-        }
-
-        // empty features
-        this.commons.features = this.emptyFeatures()
-        // redraw features
-        this.drawFeatures()
-        // defreeze viewer
-        this.stopFlagLoading(feature.id)
-
-
-    }
-
-    private resetTooltip(tooltipdiv) {
-        // empty custom tooltip in reset
-        tooltipdiv.transition()
-            .duration(500)
-            .style("opacity", 0);
-        tooltipdiv.html("");
-        tooltipdiv.status = 'closed';
-    }
-
 
     /*** PUBLIC FUNCTIONS ***/
 
@@ -1128,7 +1172,7 @@ class FeatureViewer {
         // remove sequence
         this.commons.svgContainer.select(".mySequence").remove();
         // draw sequence
-        this.updateSequenceView(true)
+        this.updateSequenceView()
 
         this.commons.current_extend = {
             length: this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start,
@@ -1296,8 +1340,6 @@ class FeatureViewer {
         }
 
         // re-init features and yData
-        // this.commons.features = [];
-        // this.commons.yData = [];
         this.commons.features = this.commons.features.filter(checkSequence)
         this.commons.yData = this.commons.yData.filter(checkSequence);
 
@@ -1413,70 +1455,12 @@ class FeatureViewer {
         }
     }
 
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name onRegionSelected
-     * @return {object} Object describing the selected feature */
-    public onRegionSelected(listener) {
-        this.commons.svgElement.addEventListener(this.commons.events.FEATURE_SELECTED_EVENT, listener);
+    public stopFlagLoading = function (id) {
+        d3.select(`#${this.divId}`).select("#fvoverlay").attr("class", null)
     };
 
     public removeResizeListener() {
         window.removeEventListener("resize", this.updateWindow);
-    };
-
-    // edit: listener of selected flag
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name onFeatureSelected
-     * @description Expected usage: once flag is selected, addSubFeature()
-     * @return {object} Object describing the selected flag */
-    public onFeatureSelected(listener) {
-        this.commons.svgElement.addEventListener(this.commons.events.FLAG_SELECTED_EVENT, listener);
-    };
-
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name onButtonSelected
-     * @return {object} Object describing the selected 3D button */
-    public onButtonSelected(listener) {
-        this.commons.svgElement.addEventListener(this.commons.events.TAG_SELECTED_EVENT, listener);
-    };
-
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name onZoom
-     * @return {object} Object describing the zoom event */
-    public onZoom(listener) {
-        this.commons.svgElement.addEventListener(this.commons.events.ZOOM_EVENT, listener);
-    };
-
-    // edit: listener of clear selection
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name onClearSelection
-     * @return {object} Object describing the zoom out/clear selection event */
-    public onClearSelection(listener) {
-        this.commons.svgElement.addEventListener(this.commons.events.CLEAR_SELECTION_EVENT, listener);
-    };
-
-    // edit: listener of animation off
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name onAnimationOff
-     * @return {object} Object describing the zoom out/clear selection event */
-    public onAnimationOff(listener) {
-        this.commons.svgElement.addEventListener(this.commons.events.ANIMATIONS_FALSE_EVENT, listener);
-    };
-
-    public stopFlagLoading = function (id) {
-        d3.select(`#${this.divId}`).select("#fvoverlay").attr("class", null)
     };
 
     // function to call resize from external
@@ -1490,45 +1474,8 @@ class FeatureViewer {
         this.updateWindow()
     };
 
-    /**
-     * @function
-     * @methodOf FeatureViewer
-     * @name addFeature
-     * @param {object} object - The input feature
-     * @param {number} flagLevel - The indent level for rendering flag
-     * @property {Array<object>} feature.data
-     * @property {int} feature.data.<Object>.x - first position
-     * @property {int} feature.data.<Object>.y - last position (or a value for features of type "curve")
-     * @property {string} [feature.data.<Object>.id] - id
-     * @property {string} [feature.data.<Object>.description] - description
-     * @property {string} [feature.data.<Object>.color] - color
-     * @property {string} [feature.data.<Object>.tooltip] - message for the region tooltip
-     * @property {string} feature.type -  ("rect","curve","unique","circle") : The type of feature, for a specific rendering
-     * @property {string} [feature.name] - The name of theses features, which will be display as a label on the Y-axis
-     * @property {string} [feature.className] - a class name, for further personal computing
-     * @property {int} [feature.height] - height of the feature
-     * @property {string} [feature.color] - The color of the features
-     * @property {boolean} [feature.hasSubFeatures] - determines if object is clickable and expands for subFeature visualization
-     * @property {string} [feature.filter] - a class filter, for further personal computing
-     * @property {number} [feature.disorderContent] - content of disorder content tag (right side of viewer)
-     * @property {number} [feature.tooltip] - message for the flag tooltip
-     * @property {Array<object>} [feature.links]
-     * @property {string} [feature.links.<Object>.name] - The button name, used to identify click event
-     * @property {string} [feature.links.<Object>.icon]  - Glyphicon code or text, specify glyphicon in unicode format, ex. \ue030
-     * @property {string} [feature.links.<Object>.message] - The message for tooltip
-     * @property {string} [feature.links.<Object>.color] - Optional color for the visualized glyphicon
-     */
-    private addFeature(object: FeatureObject, flagLevel=1) {
-        this.addFeatureCore(object, flagLevel);
-        if (object.subfeatures && object.isOpen) {
-            flagLevel+=1
-            for (const sft of object.subfeatures) {
-                this.addFeature(sft, flagLevel)
-            }
-        } return object.id
-    }
-
     public addFeatures(featureList: FeaturesList) {
+
         this.commons.viewerOptions.backup.features = featureList;
         let featureids = featureList.map(item => item.id).filter(e => {return e});
 
@@ -1599,13 +1546,65 @@ class FeatureViewer {
 
     }
 
-    private getLevel(f, l) {
-        l++
-        if (f.hasOwnProperty('subfeatures')) {
-            l = this.getLevel(f.subfeatures, l)
-        }
-        return l
-    }
+    /*** LISTENER ***/
+
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name onRegionSelected
+     * @return {object} Object describing the selected feature */
+    public onRegionSelected(listener) {
+        this.commons.svgElement.addEventListener(this.commons.events.FEATURE_SELECTED_EVENT, listener);
+    };
+
+    // edit: listener of selected flag
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name onFeatureSelected
+     * @description Expected usage: once flag is selected, addSubFeature()
+     * @return {object} Object describing the selected flag */
+    public onFeatureSelected(listener) {
+        this.commons.svgElement.addEventListener(this.commons.events.FLAG_SELECTED_EVENT, listener);
+    };
+
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name onButtonSelected
+     * @return {object} Object describing the selected 3D button */
+    public onButtonSelected(listener) {
+        this.commons.svgElement.addEventListener(this.commons.events.TAG_SELECTED_EVENT, listener);
+    };
+
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name onZoom
+     * @return {object} Object describing the zoom event */
+    public onZoom(listener) {
+        this.commons.svgElement.addEventListener(this.commons.events.ZOOM_EVENT, listener);
+    };
+
+    // edit: listener of clear selection
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name onClearSelection
+     * @return {object} Object describing the zoom out/clear selection event */
+    public onClearSelection(listener) {
+        this.commons.svgElement.addEventListener(this.commons.events.CLEAR_SELECTION_EVENT, listener);
+    };
+
+    // edit: listener of animation off
+    /**
+     * @function
+     * @methodOf FeatureViewer
+     * @name onAnimationOff
+     * @return {object} Object describing the zoom out/clear selection event */
+    public onAnimationOff(listener) {
+        this.commons.svgElement.addEventListener(this.commons.events.ANIMATIONS_FALSE_EVENT, listener);
+    };
 
     constructor(sequence: string, div: string, options?: UserOptions, features?: FeaturesList) {
 

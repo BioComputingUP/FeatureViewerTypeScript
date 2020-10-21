@@ -37,6 +37,48 @@ export class Transition extends ComputingFunctions {
 
     }
 
+    public arrow(object) {
+      let container = this.commons.svgContainer.select(`#c${object.id}_container`);
+      // line does not require transition
+
+      let transit1, transit2;
+      // group selection
+      transit1 = container.selectAll("." + "arrowfv" + "Group")
+      transit2 = container.selectAll("." + "arrowfv")
+      // transition
+      if (this.commons.animation) {
+          transit1
+              .transition()
+              .duration(500);
+          transit2
+              .transition()
+              .duration(500);
+      }
+      // transition
+      transit1.attr("transform",  (d) => {
+          return "translate(" + this.rectX(d) + ",0)"
+      });
+      transit2
+          .attr("d", (d) => {
+            let h = this.commons.elementHeight;
+            let w = this.rectWidth2(d);
+            return `m0 0 h${w-5} c0 0 ${h/4} ${h/4} ${h/2} ${h/2}-0 0-${h/4} ${h/4}-${h/2} ${h/2} h${-w+5} v${-h/2} z`;
+          });
+
+      // transition to text
+      container.selectAll("." + object.className + "Text")
+          .attr("transform",  (d) => {
+              if (d.label && this.commons.scaling(d['x'])<0) {
+                  return "translate(" + -this.rectX(d) + ",0)"
+              }
+          })
+          .style("visibility",  (d) => {
+              if (d.label && this.commons.scaling(d['x'])>0) {
+                  return (this.commons.scaling(d.y) - this.commons.scaling(d['x'])) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
+              } else return "hidden";
+          });
+    }
+
     public rectangle(object) {
 
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);

@@ -244,6 +244,11 @@ class FillSVG extends ComputingFunctions {
             }
 
         }
+        else if (feature.type === "arrow") {
+
+          this.arrow(feature, this.commons.YPosition);
+
+        }
         else if (feature.type === "text") {
 
             this.commons.scaling.range([5, this.commons.viewerOptions.width - 5]);
@@ -379,7 +384,7 @@ class FillSVG extends ComputingFunctions {
                             .attr("height", "100%")
                             .attr("y",-6)
                             .html(content)
-                            
+
                         if (bt.type !== "percentage") {
                             gButton.call(this.commons.d3helper.genericTooltip(bt));
                         }
@@ -941,6 +946,136 @@ class FillSVG extends ComputingFunctions {
         this.forcePropagation(pathsDB);
         // re-init object.heigth
         object.height = this.commons.step / 2;
+
+    }
+
+    public arrow(object, position) {
+        //var rectShift = 20;
+        if (!object.height) object.height = this.commons.elementHeight;
+        let rectHeight = this.commons.elementHeight;
+
+        let rectShift = rectHeight + rectHeight / 3;
+        let lineShift = rectHeight / 2 - 6;
+        position = Number(position) + 3; // center line
+
+        let rectsPro = this.commons.svgContainer.append("g")
+            .attr("class", "arrow featureLine")
+            //.attr("clip-path", "url(#clip)") // firefox compatibility
+            .attr("transform", "translate(0," + position + ")")
+            .attr("id", () => {
+                // random string
+                // return divId + '_' + d.title.split(" ").join("_") + '_g'
+                return 'c' + object.id + '_container'
+            });
+        // commenting to dist
+
+        let dataLine = [];
+        // case with empty data
+        if (!this.commons.level) {
+            this.commons.level = 1
+        }
+        for (let i = 0; i < this.commons.level; i++) {
+            dataLine.push([{
+                x: 1,
+                y: (i * rectShift + lineShift),
+            }, {
+                x: this.commons.fvLength,
+                y: (i * rectShift + lineShift)
+            }]);
+        }
+
+        rectsPro.selectAll(".line " + object.className)
+            .data(dataLine)
+            .enter()
+            .append("path")
+            .attr("y", (d) => {
+                return d.level * rectShift
+            })
+            .attr("d", this.commons.line)
+            .attr("class", () => {
+                return "line " + object.className
+            })
+            .style("z-index", "0")
+            .style("stroke", object.color)
+            .style("stroke-width", "1px");
+
+        let rectsProGroup = rectsPro.selectAll("." + object.className + "Group")
+            .data(object.data)
+            .enter()
+            .append("g")
+            .attr("class", object.className + "Group")
+            .attr("transform", (d) => {
+                var transform = "translate(" + this.rectX(d) + ",0)";
+                if (d.direction === "left") {
+                    transform += " scale(-1, 1)";
+                };
+                return transform
+            });
+
+        rectsProGroup
+            .append("path")
+            .attr("class", "element " + object.className)
+            .attr("id", (d) => {
+                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+                d.id = id;
+                return id;
+            })
+            // .attr("y", (d) => d.level * rectShift)
+            .attr("ry", (d) => this.commons.radius)
+            .attr("rx", (d) => this.commons.radius)
+
+            .attr("d", (d) => {
+              let h = this.commons.elementHeight;
+              let w = this.rectWidth2(d);
+              return `m0 0 h${w-5} c0 0 ${h/4} ${h/4} ${h/2} ${h/2}-0 0-${h/4} ${h/4}-${h/2} ${h/2} h${-w+5} v${-h/2} z`;
+            })
+            .style("z-index", "13")
+            .style("fill-opacity", (d) => {
+                if (d.opacity) {
+                    return d.opacity
+                } else if (object.opacity) {
+                    return object.opacity
+                } else {
+                    return "0.6"
+                }
+            })
+            .style("fill", (d) => {
+                return d.color || object.color
+            })
+            .style("stroke", (d) => {
+                if ("stroke" in d) {
+                    return d.stroke
+                } else if ("stroke" in object) {
+                    return object.stroke
+                } else {
+                    return d.color
+                }
+            })
+            .call(this.commons.d3helper.tooltip(object));
+
+        rectsProGroup
+            .append("text")
+            .attr("class", "element " + object.className + "Text")
+            .attr("y", (d) => {
+                return d.level * rectShift + rectHeight / 2
+            })
+            .attr("dy", "0.35em")
+            .style("font-size", "10px")
+            .text((d) => {
+                return d.label
+            })
+            .style("fill", "rgba(39, 37, 37, 0.9)")
+            .style("z-index", "15")
+            .style("visibility",  (d) => {
+                if (d.label) {
+                    return (this.commons.scaling(d.y) - this.commons.scaling(d.x)) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
+                } else return "hidden";
+            })
+            .call(this.commons.d3helper.tooltip(object));
+
+        this.forcePropagation(rectsProGroup);
+        let uniqueShift = rectHeight > 12 ? rectHeight - 6 : 0;
+        this.commons.YPosition += this.commons.level < 2 ? uniqueShift : (this.commons.level - 1) * rectShift + uniqueShift;
 
     }
 

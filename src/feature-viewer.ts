@@ -584,6 +584,8 @@ class FeatureViewer {
                 this.transition.lollipop(o);
             } else if (o.type === "curve") {
                 this.transition.lineTransition(o);
+            } else if (o.type === "arrow") {
+                this.transition.arrow(o);
             }
             // resize basal line too
             this.transition.basalLine(o);

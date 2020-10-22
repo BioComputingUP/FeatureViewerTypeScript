@@ -63,8 +63,11 @@ export class Transition extends ComputingFunctions {
       // transition to text
       container.selectAll("." + object.className + "Text")
           .attr("transform",  (d) => {
+              let offset = (d.direction === "left" ? this.commons.elementHeight / 2 : 0);
               if (d.label && this.commons.scaling(d['x'])<0) {
-                  return "translate(" + -this.rectX(d) + ",0)"
+                  return "translate(" + -this.rectX(d) + offset + ",0)"
+              } else {
+                  return "translate(" + offset + ",0)"
               }
           })
           .style("visibility",  (d) => {

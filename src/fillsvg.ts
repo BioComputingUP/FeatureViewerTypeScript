@@ -988,9 +988,7 @@ class FillSVG extends ComputingFunctions {
             .data(dataLine)
             .enter()
             .append("path")
-            .attr("y", (d) => {
-                return d.level * rectShift
-            })
+            .attr("y", 0)
             .attr("d", this.commons.line)
             .attr("class", () => {
                 return "line " + object.className
@@ -1020,15 +1018,11 @@ class FillSVG extends ComputingFunctions {
                 d.id = id;
                 return id;
             })
-            // .attr("y", (d) => d.level * rectShift)
+            .attr("y", 0)
             .attr("ry", (d) => this.commons.radius)
             .attr("rx", (d) => this.commons.radius)
 
-            .attr("d", (d) => {
-              let h = this.commons.elementHeight;
-              let w = this.rectWidth2(d);
-              return `m0 0 h${w-5} c0 0 ${h/4} ${h/4} ${h/2} ${h/2}-0 0-${h/4} ${h/4}-${h/2} ${h/2} h${-w+5} v${-h/2} z`;
-            })
+            .attr("d", (d) => this.arrowPath(d))
             .style("z-index", "13")
             .style("fill-opacity", (d) => {
                 if (d.opacity) {
@@ -1056,14 +1050,10 @@ class FillSVG extends ComputingFunctions {
         rectsProGroup
             .append("text")
             .attr("class", "element " + object.className + "Text")
-            .attr("y", (d) => {
-                return d.level * rectShift + rectHeight / 2
-            })
+            .attr("y", (d) => rectHeight / 2)
             .attr("dy", "0.35em")
             .style("font-size", "10px")
-            .text((d) => {
-                return d.label
-            })
+            .text((d) => d.label)
             .style("fill", "rgba(39, 37, 37, 0.9)")
             .style("z-index", "15")
             .style("visibility",  (d) => {

@@ -23,6 +23,22 @@ class ComputingFunctions {
         return scale
     };
 
+    public arrowPath = (d) => {
+      let h = this.commons.elementHeight;
+      let w = this.rectWidth2(d);
+
+      // if the feature is too small, just make a small rectangle
+      if (w <= h/2) {
+        return `m0 0 h${w} v${h} h${-w}z`;
+      }
+
+      if (d.direction === "left") {
+        return `m${w} 0 h${-w+h/2} l${-h/2} ${h/2} l${h/2} ${h/2} h${w-h/2} z`
+      } else {
+        return `m0 0 h${w-h/2} l${h/2} ${h/2} l${-h/2} ${h/2} h${-w+h/2} z`
+      }
+    };
+
     protected displaySequence(seq) {
         return this.commons.viewerOptions.width / seq > 5;
     }

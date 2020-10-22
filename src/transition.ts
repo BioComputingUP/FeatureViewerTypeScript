@@ -58,12 +58,7 @@ export class Transition extends ComputingFunctions {
       transit1.attr("transform",  (d) => {
           return "translate(" + this.rectX(d) + ",0)"
       });
-      transit2
-          .attr("d", (d) => {
-            let h = this.commons.elementHeight;
-            let w = this.rectWidth2(d);
-            return `m0 0 h${w-5} c0 0 ${h/4} ${h/4} ${h/2} ${h/2}-0 0-${h/4} ${h/4}-${h/2} ${h/2} h${-w+5} v${-h/2} z`;
-          });
+      transit2.attr("d", (d) => this.arrowPath(d));
 
       // transition to text
       container.selectAll("." + object.className + "Text")

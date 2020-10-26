@@ -236,8 +236,12 @@ class FillSVG extends ComputingFunctions {
 
         if (feature.type === "rect") {
 
-            this.preComputing.multipleRect(feature);
-            this.rectangle(feature, this.commons.YPosition);
+            if ('variant' in feature && feature.variant == "overlap") {
+                this.rectangle(feature, this.commons.YPosition);
+            } else {
+                this.preComputing.multipleRect(feature);
+                this.rectangle(feature, this.commons.YPosition);
+            }
 
         }
         else if (feature.type === "text") {
@@ -543,7 +547,13 @@ class FillSVG extends ComputingFunctions {
 
         rectsProGroup
             .append("rect")
-            .attr("class", "element " + object.className)
+            .attr("class", (d) => {
+                if (!d.className) {
+                    return "element " + object.className
+                } else {
+                    return "element " + object.className + " " + d.className
+                }
+            })
             .attr("id", (d) => {
                 // add id to object
                 let id = "f_" + object.id + '_' + d.x + '-' + d.y;
@@ -564,7 +574,7 @@ class FillSVG extends ComputingFunctions {
             })
             .attr("height", this.commons.elementHeight)
             .style("fill", (d) => {
-                return d.color || object.color
+               return d.color || object.color
             })
             .style("fill-opacity", (d) => {
                 if (d.opacity) {

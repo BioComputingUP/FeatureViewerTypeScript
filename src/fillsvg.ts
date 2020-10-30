@@ -241,12 +241,12 @@ class FillSVG extends ComputingFunctions {
             } else {
                 this.preComputing.multipleRect(feature);
                 this.rectangle(feature, this.commons.YPosition);
-            }
 
         }
         else if (feature.type === "arrow") {
 
           this.arrow(feature, this.commons.YPosition);
+
 
         }
         else if (feature.type === "text") {

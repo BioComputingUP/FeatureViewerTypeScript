@@ -277,8 +277,9 @@ class Tool extends Calculate {
                     }
                     else if (object.type === "button") {
                         tooltip_message = getMessage(object);
-                    } else {
-                        // e.g. rect
+                    }
+                     else {
+                        // e.g. rect, arrow
                         tooltip_message = getMessage(pD);
                     }
                     return tooltip_message
@@ -418,7 +419,7 @@ class Tool extends Calculate {
                         }
                     });
             };
-            
+
             return tooltip;
         };
 

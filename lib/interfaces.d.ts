@@ -70,6 +70,7 @@ export interface FeaturesList extends Array<FeatureObject> {
 export interface FeatureObject {
     id: string;
     type: string;
+    variant?: string;
     data: Array<FeatureData>;
     parentId?: any;
     label?: string;

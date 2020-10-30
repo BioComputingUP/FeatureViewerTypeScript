@@ -10,7 +10,7 @@ import FillSVG from "./fillsvg";
 import Calculate from "./calculate";
 import Tool from "./tooltip";
 
-// import * as fvstyles from './../assets/fv.scss';
+// import * as fvstyles from '../assets/fv.scss';
 
 
 class FeatureViewer {
@@ -586,6 +586,8 @@ class FeatureViewer {
                 this.transition.lineTransition(o);
             } else if (o.type === "arrow") {
                 this.transition.arrow(o);
+            } else {
+                console.log("Feature", o.id, "type unknown")
             }
             // resize basal line too
             this.transition.basalLine(o);

@@ -14,6 +14,10 @@
       "underscore",
       "html-to-image"
     ],
+    "baseUrl": ".",
+    "paths": {
+      "assets/*": ["assets/*"]
+    },
     "lib": ["es6", "dom", "es2017"],
     "outDir": "./lib"
   },
@@ -29,5 +33,5 @@
     "src/tooltip.ts",
     "src/transition.ts"
   ],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["node_modules"]
 }

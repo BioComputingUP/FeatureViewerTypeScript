@@ -16,6 +16,7 @@ declare class FillSVG extends ComputingFunctions {
     lollipop(object: any, position: any): void;
     circle(object: any, position: any): void;
     path(object: any, position: any): void;
+    arrow(object: any, position: any): void;
     fillSVGLine(object: any, position?: number): void;
     multipleRect(object: any, position?: number, level?: any): void;
     reset_axis(): void;

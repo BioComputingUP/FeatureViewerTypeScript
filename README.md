@@ -3,6 +3,12 @@
 This is a code repository for the BioComputingUP Feature Viewer project.
 Full documentation at: http://protein.bio.unipd.it/feature-viewer.
 
+The Feature-Viewer was published as:
+
+| [The Feature-Viewer: a visualization tool for positional annotations on a sequence](https://academic.oup.com/bioinformatics/article/36/10/3244/5716324) |
+| -------------  |
+| L. Paladin, M. Schaeffer *et al.*, Bioinformatics 2020 |
+
 This project is based on the Javascript version [calipho-sib/feature-viewer](https://github.com/calipho-sib/feature-viewer), 
 Copyright (c) 2015, SIB Swiss Institute of Bioinformatics. This version is based on [Typescript](https://www.typescriptlang.org/) 
 and compatible with [Angular 2+](https://angular.io/) framework.

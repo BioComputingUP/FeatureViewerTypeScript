@@ -21,6 +21,9 @@
     "lib": ["es6", "dom", "es2017"],
     "outDir": "./lib"
   },
+  "files": [
+        "./src/index.ts"
+  ],
   "include": [
     "src/calculate.ts",
     "src/commons.ts",

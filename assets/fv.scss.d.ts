@@ -1,13 +1,17 @@
-export const helperButton: string;
-export const selectionRect: string;
-export const brush: string;
-export const selection: string;
-export const mybutton: string;
-export const mybuttonsquare: string;
-export const mybuttoncircle: string;
-export const axis: string;
-export const arrow: string;
-export const fvtooltip: string;
-export const fvcustomtooltip: string;
-export const pageoverlay: string;
-export const loadingcolorflag: string;
+declare const styles: {
+  readonly "helperButton": string;
+  readonly "selectionRect": string;
+  readonly "brush": string;
+  readonly "selection": string;
+  readonly "mybutton": string;
+  readonly "mybuttonsquare": string;
+  readonly "mybuttoncircle": string;
+  readonly "axis": string;
+  readonly "arrow": string;
+  readonly "fvtooltip": string;
+  readonly "fvcustomtooltip": string;
+  readonly "pageoverlay": string;
+  readonly "loadingcolorflag": string;
+};
+export = styles;
+

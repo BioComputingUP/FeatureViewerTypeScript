@@ -1651,5 +1651,5 @@ class FeatureViewer {
     }
 }
 
-/*export {FeatureViewer};*/
 (window as any).FeatureViewer = FeatureViewer;
+export {FeatureViewer};

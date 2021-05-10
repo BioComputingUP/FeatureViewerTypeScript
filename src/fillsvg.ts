@@ -557,10 +557,17 @@ class FillSVG extends ComputingFunctions {
                 }
             })
             .attr("id", (d) => {
-                // add id to object
-                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
-                d.id = id;
-                return id;
+		// if present id do nothing else make id
+		if(d.id){
+			return d.id;
+			
+		}else{
+			// add id to object
+			let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+			d.id = id;
+			return id;
+		}
+                
             })
             .attr("y", (d) => {
                 return d.level * rectShift
@@ -672,9 +679,15 @@ class FillSVG extends ComputingFunctions {
             // .attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
-                d.id = id;
-                return id;
+		if(d.id){
+			return d.id;
+			
+		}else{
+			// add id to object
+			let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+			d.id = id;
+			return id;
+		}
             })
             .attr("x", (d) => {
                 return this.commons.scaling(d.x - 0.4)
@@ -1011,9 +1024,15 @@ class FillSVG extends ComputingFunctions {
             .append("path")
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
-                d.id = id;
-                return id;
+		if(d.id){
+			return d.id;
+			
+		}else{
+			// add id to object
+			let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+			d.id = id;
+			return id;
+		}
             })
             .attr("y", 0)
             .attr("ry", (d) => this.commons.radius)

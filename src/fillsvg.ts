@@ -557,7 +557,7 @@ class FillSVG extends ComputingFunctions {
                 }
             })
             .attr("id", (d) => {
-		// if present id do nothing else make id
+                // add id to object
 		if(d.id){
 			return d.id;
 			
@@ -567,7 +567,6 @@ class FillSVG extends ComputingFunctions {
 			d.id = id;
 			return id;
 		}
-                
             })
             .attr("y", (d) => {
                 return d.level * rectShift

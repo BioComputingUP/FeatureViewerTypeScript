@@ -1388,7 +1388,15 @@ class FeatureViewer {
                 }
             }
             // let newid = region.id? region.id : featureid;
-            let regionid = "f_" + featureid + '_' + region.x + '-' + region.y;
+            //let regionid = "f_" + featureid + '_' + region.x + '-' + region.y;
+	    let regionid='';
+	    
+	    if(region.id){
+		regionid=region.id;
+	    }else{
+		regionid = "f_" + featureid + '_' + region.x + '-' + region.y;
+	    }
+	    
             this.tool.colorSelectedFeat(regionid, feature, this.commons.divId);
         } else { this.commons.logger.warn("Selected feature id does not exist!") }
 

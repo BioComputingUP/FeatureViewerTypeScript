@@ -1,7 +1,7 @@
 import * as d3 from './custom-d3'
 import { event as currentEvent } from 'd3-selection';
 import * as _ from 'underscore';
-import htmlToImage from 'html-to-image';
+import * as htmlToImage from 'html-to-image';
 
 import { FeaturesList, FeatureObject, UserOptions, FeatureViewerLog } from './interfaces';
 import Commons from './commons';

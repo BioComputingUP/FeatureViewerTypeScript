@@ -38,22 +38,3 @@ When you're done making changes and you'd like to propose them for review, open 
 ### Your PR is merged!
 Congratulations! The whole GitHub community thanks you. :sparkles:
 Once your PR is merged, you will be proudly listed as a contributor in the [contributor chart](https://github.com/BioComputingUP/feature-viewer-typescript/graphs/contributors).
-
-**Learn more about contributing:**
-
-- [Types of contributions :memo:](#types-of-contributions-memo)
-  - [:mega: Discussions](#mega-discussions)
-  - [:beetle: Issues](#beetle-issues)
-  - [:hammer_and_wrench: Pull requests](#hammer_and_wrench-pull-requests)
-  - [:question: Support](#question-support)
-  - [:earth_asia: Translations](#earth_asia-translations)
-  - [:balance_scale: Site Policy](#balance_scale-site-policy)
-- [Starting with an issue](#starting-with-an-issue)
-  - [Labels](#labels)
-- [Opening a pull request](#opening-a-pull-request)
-- [Working in the github/docs repository](#working-in-the-githubdocs-repository)
-- [Reviewing](#reviewing)
-  - [Self review](#self-review)
-  - [Pull request template](#pull-request-template)
-  - [Suggested changes](#suggested-changes)
-- [Windows](#windows)

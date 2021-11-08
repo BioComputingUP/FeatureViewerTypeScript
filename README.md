@@ -114,6 +114,13 @@ fv.addFeatures(
 
 If you have any problem or suggestion please open an issue.
 
+## Developers
+
+Build with: npm run sass && webpack.
+
+To test: run test-index.html.
+
+
 ## License
 
 This repo is based on [calipho-sib/feature-viewer](https://github.com/calipho-sib/feature-viewer), Copyright (c) 2015, SIB Swiss 

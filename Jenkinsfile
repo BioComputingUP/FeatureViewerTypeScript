@@ -16,7 +16,7 @@ pipeline {
   }
 
   agent {
-    label 'ico-jenkins-node'
+    label 'graphdb-jenkins-node'
   }
 
   options {

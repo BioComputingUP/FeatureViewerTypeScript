@@ -1,40 +1,38 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "declaration": true,
-    "target": "es2015",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitReturns": true,
     "noImplicitAny": false,
-    "removeComments": true,
-    "preserveConstEnums": true,
+    "strictNullChecks": false,
+    "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
-    "typeRoots" : ["./node_modules/@types"],
-    "types" : [
-      "d3",
-      "underscore",
-      "html-to-image"
-    ],
-    "baseUrl": ".",
+    "declaration": false,
+    "downlevelIteration": true,
     "paths": {
-      "assets/*": ["assets/*"]
+      "ngx-feature-viewer": [
+        "dist/ngx-feature-viewer/ngx-feature-viewer",
+        "dist/ngx-feature-viewer"
+      ]
     },
-    "lib": ["es6", "dom", "es2017"],
-    "outDir": "./lib"
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "es2020",
+    "lib": [
+      "es2018",
+      "dom"
+    ]
   },
-  "files": [
-        "./src/index.ts"
-  ],
-  "include": [
-    "src/calculate.ts",
-    "src/commons.ts",
-    "src/custom-d3.ts",
-    "src/feature-viewer.ts",
-    "src/fillsvg.ts",
-    "src/helper.ts",
-    "src/index.ts",
-    "src/interfaces.ts",
-    "src/tooltip.ts",
-    "src/transition.ts"
-  ],
-  "exclude": ["node_modules"]
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
 }

@@ -1,8 +1,7 @@
-# ngx-feature-viewer
+# ngx Feature Viewer
 
 This is a code repository for the Ngx Feature Viewer project.
 Represent biological data with the feature viewer library!
-<strong>This project is fully compatible with Angular 11.</strong>
 
 Documentation and examples at: 
 * http://protein.bio.unipd.it/feature-viewer
@@ -18,6 +17,8 @@ This project is based on:
 * The TypeScript Feature Viewer [feature-viewer-typescript](https://github.com/BioComputingUP/feature-viewer-typescript) 
 * The Javascript version [calipho-sib/feature-viewer](https://github.com/calipho-sib/feature-viewer), 
 Copyright (c) 2015, SIB Swiss Institute of Bioinformatics. 
+
+<strong>This project is fully compatible with Angular 11.</strong>
 
 ## Dependencies
 
@@ -113,7 +114,7 @@ fv.addFeatures(
 
 7 Output
 
-![Feature Viewer](projects/ngx-feature-viewer/assets/fvDemo.png)
+![Feature Viewer](assets/fvDemo.png)
 
 ## Support
 If you have any problem or suggestion please open an issue.

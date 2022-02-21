@@ -1,0 +1,16 @@
+# Ignore tests
+**/*.spec.ts
+
+# Ignore specific files
+**/*.ico
+**/*.json
+**/*.md
+**/*.png
+**/*.svg
+
+# Ignore styling
+**/*.css
+**/*.scss
+
+# Ignore Jest test setup file
+/src/test.ts

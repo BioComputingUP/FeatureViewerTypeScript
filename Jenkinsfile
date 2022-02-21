@@ -32,6 +32,7 @@ pipeline {
 
   stages {
     stage ('Prepare') {
+      steps {
         // Change versions
         sh "npm version --git-tag-version=false ${ReleaseVersion}"
 

@@ -32,10 +32,6 @@ pipeline {
 
   stages {
     stage ('Prepare') {
-      steps {
-        // Switch to branch
-        sh "git checkout ${branch}"
-
         // Change versions
         sh "npm version --git-tag-version=false ${ReleaseVersion}"
 

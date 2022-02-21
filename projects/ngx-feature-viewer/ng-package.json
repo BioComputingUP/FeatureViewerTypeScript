@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/ngx-feature-viewer",
+  "lib": {
+    "entryFile": "src/public-api.ts"
+  },
+  "allowedNonPeerDependencies": [
+    "@types/*",
+    "@types/underscore",
+    "byots",
+    "codemirror",
+    "css-to-ts",
+    "d3-axis",
+    "d3-brush",
+    "d3-scale",
+    "d3-selection",
+    "d3-shape",
+    "html-to-image",
+    "npx",
+    "sass",
+    "typed-css-modules",
+    "underscore"
+    ],
+  "assets": ["./assets"]
+}

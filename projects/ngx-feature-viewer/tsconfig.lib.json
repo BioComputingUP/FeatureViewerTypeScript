@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/lib",
+    "target": "es2015",
+    "declaration": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "types": [
+      "d3",
+      "underscore",
+      "html-to-image"
+    ],
+    "lib": [
+      "dom",
+      "es2018",
+      "es6"
+    ],
+    "paths": {
+      "assets/*": ["assets/*"]
+    }
+  },
+  "angularCompilerOptions": {
+    "skipTemplateCodegen": true,
+    "strictMetadataEmit": true,
+    "enableResourceInlining": true
+  },
+  "exclude": [
+    "src/test.ts",
+    "**/*.spec.ts"
+  ]
+}

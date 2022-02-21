@@ -1,6 +1,6 @@
 {
   "name": "ngx-feature-viewer",
-  "version": "0.0.1",
+  "version": "0.0.1-RC1",
   "description": "Represent biological data with the feature viewer library",
   "peerDependencies": {
     "@angular/common": "^11.1.2",

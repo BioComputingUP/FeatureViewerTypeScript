@@ -7,20 +7,20 @@
     "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true,
-    "typeRoots" : ["./node_modules/@types"],
-    "types" : [
-      "d3",
-      "underscore",
-      "html-to-image"
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "assets/*": ["assets/*"]
-    },
-    "lib": ["es6", "dom", "es2017"],
-    "outDir": "./lib"
+    "sourceMap": true
   },
+  "typeRoots" : ["./node_modules/@types"],
+  "types" : [
+    "d3",
+    "underscore",
+    "html-to-image"
+  ],
+  "baseUrl": ".",
+  "paths": {
+    "assets/*": ["assets/*"]
+  },
+  "lib": ["es6", "dom", "es2017"],
+  "outDir": "./lib",
   "files": [
         "./src/index.ts"
   ],

@@ -18,7 +18,8 @@ export interface UserOptions {
   sideBar?: number | string | boolean,
   animation?: boolean,
   unit?: string,
-  backgroundcolor?: string
+  backgroundcolor?: string,
+  maxDepth?: number
 }
 
 export interface ViewerOptions {
@@ -73,7 +74,6 @@ export interface FeaturesList extends Array<FeatureObject>{}
 export interface FeatureObject {
   id: string,
   type: string // "rect" | "path" | "curve" | "unique" | "circle" | "sequence" | "lollipop",
-  variant?: string, // "overlap"
   data: Array<FeatureData>,
   parentId?: any,
   label?: string,

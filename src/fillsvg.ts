@@ -96,7 +96,7 @@ class PreComputing {
         }
 
         // this.commons.lineYScale.range([0, -(shift)]).domain([0, -(level)]);
-        this.commons.lineYScale.range([minScore, maxScore]).domain([0, this.commons.step/50]);
+        this.commons.lineYScale.domain([minScore, maxScore]).range([0, this.commons.step/11]);
 
         object.pathLevel = shift * 10 + 5;
         object.level = level;
@@ -230,21 +230,17 @@ class FillSVG extends ComputingFunctions {
             isOpen: feature.isOpen,
             ladderColor: feature.ladderColor? feature.ladderColor : null,
             ladderLabel: feature.ladderLabel? feature.ladderLabel : null,
+            ladderBgColor: feature.ladderBgColor? feature.ladderBgColor : null,
+            ladderBorderColor: feature.ladderBorderColor? feature.ladderBorderColor : null,
             yMin: feature.yMin? feature.yMin : null,
             yMax: feature.yMax? feature.yMax : null
         });
 
         if (feature.type === "rect") {
 
-            if ('variant' in feature && feature.variant == "overlap") {
-                this.rectangle(feature, this.commons.YPosition);
-            } else {
-                this.preComputing.multipleRect(feature);
-                this.rectangle(feature, this.commons.YPosition);
-            }
-        }
-        else if (feature.type === "arrow") {
-          this.arrow(feature, this.commons.YPosition);
+            this.preComputing.multipleRect(feature);
+            this.rectangle(feature, this.commons.YPosition);
+
         }
         else if (feature.type === "text") {
 
@@ -297,14 +293,14 @@ class FillSVG extends ComputingFunctions {
             let negativeNumbers = false;
             feature.data.forEach((d) => {
                 if (d.filter((l) => {
-                        return l.y < 0
-                    }).length) negativeNumbers = true;
+                    return l.y < 0
+                }).length) negativeNumbers = true;
             });
             this.preComputing.preComputingLine(feature);
 
             this.fillSVGLine(feature, this.commons.YPosition);
             feature.data = this.storeData;
-            this.commons.YPosition += 7 // this.commons.step // feature.pathLevel;
+            this.commons.YPosition += this.commons.step // feature.pathLevel; // 7
             // this.commons.YPosition += negativeNumbers ? feature.pathLevel - 5 : 0;
 
         }
@@ -365,7 +361,7 @@ class FillSVG extends ComputingFunctions {
                             let colorrgb = this.hexToRgb(this.gradientColor(bt.label));
                             let color = 'rgba(' + [colorrgb.r, colorrgb.g, colorrgb.b].join(',') + ')';
                             let textColor = this.isLight(color) ? "black" : "white";
-                            content = `<button id="${bt.id}" class="mybutton mybutton-disabled" style="background-color: ${color.replace(')', ',0.8)')}; color: ${textColor}; border: 2px solid ${color}"><span style="font-size: small">${disordersString}</span></button>`
+                            content = `<button id="${bt.id}" class="mybutton" style="background-color: ${color.replace(')', ',0.8)')}; color: ${textColor}; border: 2px solid ${color}"><span style="font-size: small">${disordersString}</span></button>`
                         }
                         else if (bt.type == "link") {
                             let linkicon = "M9.26 13c-0.167-0.286-0.266-0.63-0.266-0.996 0-0.374 0.103-0.724 0.281-1.023l-0.005 0.009c1.549-0.13 2.757-1.419 2.757-2.99 0-1.657-1.343-3-3-3-0.009 0-0.019 0-0.028 0l0.001-0h-4c-1.657 0-3 1.343-3 3s1.343 3 3 3v0h0.080c-0.053 0.301-0.083 0.647-0.083 1s0.030 0.699 0.088 1.036l-0.005-0.036h-0.080c-2.761 0-5-2.239-5-5s2.239-5 5-5v0h4c0.039-0.001 0.084-0.002 0.13-0.002 2.762 0 5.002 2.239 5.002 5.002 0 2.717-2.166 4.927-4.865 5l-0.007 0zM10.74 7c0.167 0.286 0.266 0.63 0.266 0.996 0 0.374-0.103 0.724-0.281 1.023l0.005-0.009c-1.549 0.13-2.757 1.419-2.757 2.99 0 1.657 1.343 3 3 3 0.009 0 0.019-0 0.028-0l-0.001 0h4c1.657 0 3-1.343 3-3s-1.343-3-3-3v0h-0.080c0.053-0.301 0.083-0.647 0.083-1s-0.030-0.699-0.088-1.036l0.005 0.036h0.080c2.761 0 5 2.239 5 5s-2.239 5-5 5v0h-4c-0.039 0.001-0.084 0.002-0.13 0.002-2.762 0-5.002-2.239-5.002-5.002 0-2.717 2.166-4.927 4.865-5l0.007-0z"
@@ -480,12 +476,12 @@ class FillSVG extends ComputingFunctions {
                 .style("stroke", "grey")
                 .style("stroke-dasharray", "1,3")
                 .style("stroke-width", "1px")
-                .style("stroke-opacity", 1);
+                .style("stroke-opacity", 0);
 
-            // dottedSeqLine
-            //     .transition()
-            //     .duration(500)
-            //     .style("stroke-opacity", 1);
+            dottedSeqLine
+                .transition()
+                .duration(500)
+                .style("stroke-opacity", 1);
         }
     }
 
@@ -549,24 +545,12 @@ class FillSVG extends ComputingFunctions {
 
         rectsProGroup
             .append("rect")
-            .attr("class", (d) => {
-                if (!d.className) {
-                    return "element " + object.className
-                } else {
-                    return "element " + object.className + " " + d.className
-                }
-            })
+            .attr("class", "element " + object.className)
             .attr("id", (d) => {
                 // add id to object
-		if(d.id){
-			return d.id;
-			
-		}else{
-			// add id to object
-			let id = "f_" + object.id + '_' + d.x + '-' + d.y;
-			d.id = id;
-			return id;
-		}
+                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+                d.id = id;
+                return id;
             })
             .attr("y", (d) => {
                 return d.level * rectShift
@@ -582,7 +566,7 @@ class FillSVG extends ComputingFunctions {
             })
             .attr("height", this.commons.elementHeight)
             .style("fill", (d) => {
-               return d.color || object.color
+                return d.color || object.color
             })
             .style("fill-opacity", (d) => {
                 if (d.opacity) {
@@ -617,8 +601,8 @@ class FillSVG extends ComputingFunctions {
             .text((d) => {
                 return d.label
             })
-            .style("fill", "rgba(39, 37, 37, 0.9)")
-            .style("z-index", "15")
+            // .style("fill", "rgba(39, 37, 37, 0.9)")
+            // .style("z-index", "15")
             .style("visibility",  (d) => {
                 if (d.label) {
                     return (this.commons.scaling(d.y) - this.commons.scaling(d.x)) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
@@ -678,15 +662,9 @@ class FillSVG extends ComputingFunctions {
             // .attr("clip-path", "url(#clip)") // firefox compatibility
             .attr("class", "element " + object.className)
             .attr("id", (d) => {
-		if(d.id){
-			return d.id;
-			
-		}else{
-			// add id to object
-			let id = "f_" + object.id + '_' + d.x + '-' + d.y;
-			d.id = id;
-			return id;
-		}
+                let id = "f_" + object.id + '_' + d.x + '-' + d.y;
+                d.id = id;
+                return id;
             })
             .attr("x", (d) => {
                 return this.commons.scaling(d.x - 0.4)
@@ -876,22 +854,22 @@ class FillSVG extends ComputingFunctions {
                 return d.color || object.color
             })
             .style("fill-opacity", (d) => {
-              if (d.opacity) {
-                return d.opacity
-              } else if (object.opacity) {
-                return object.opacity
-              } else {
-                return "1"
-              }
+                if (d.opacity) {
+                    return d.opacity
+                } else if (object.opacity) {
+                    return object.opacity
+                } else {
+                    return "1"
+                }
             })
             .style("stroke", (d) => {
-              if ("stroke" in d) {
-                return d.stroke
-              } else if ("stroke" in object) {
-                return object.stroke
-              } else {
-                return d.color
-              }
+                if ("stroke" in d) {
+                    return d.stroke
+                } else if ("stroke" in object) {
+                    return object.stroke
+                } else {
+                    return d.color
+                }
             })
             .call(this.commons.d3helper.tooltip(object));
 
@@ -958,137 +936,11 @@ class FillSVG extends ComputingFunctions {
 
     }
 
-    public arrow(object, position) {
-        //var rectShift = 20;
-        if (!object.height) object.height = this.commons.elementHeight;
-        let rectHeight = this.commons.elementHeight;
-
-        let rectShift = rectHeight + rectHeight / 3;
-        let lineShift = rectHeight / 2 - 6;
-        position = Number(position) + 3; // center line
-
-        let rectsPro = this.commons.svgContainer.append("g")
-            .attr("class", "arrow featureLine")
-            //.attr("clip-path", "url(#clip)") // firefox compatibility
-            .attr("transform", "translate(0," + position + ")")
-            .attr("id", () => {
-                // random string
-                // return divId + '_' + d.title.split(" ").join("_") + '_g'
-                return 'c' + object.id + '_container'
-            });
-        // commenting to dist
-
-        let dataLine = [];
-        // case with empty data
-        if (!this.commons.level) {
-            this.commons.level = 1
-        }
-        for (let i = 0; i < this.commons.level; i++) {
-            dataLine.push([{
-                x: 1,
-                y: (i * rectShift + lineShift),
-            }, {
-                x: this.commons.fvLength,
-                y: (i * rectShift + lineShift)
-            }]);
-        }
-
-        rectsPro.selectAll(".line " + object.className)
-            .data(dataLine)
-            .enter()
-            .append("path")
-            .attr("y", 0)
-            .attr("d", this.commons.line)
-            .attr("class", () => {
-                return "line " + object.className
-            })
-            .style("z-index", "0")
-            .style("stroke", object.color)
-            .style("stroke-width", "1px");
-
-        let rectsProGroup = rectsPro.selectAll("." + object.className + "Group")
-            .data(object.data)
-            .enter()
-            .append("g")
-            .attr("class", object.className + "Group")
-            .attr("transform", (d) => {
-                var transform = "translate(" + this.rectX(d) + ",0)";
-                if (d.direction === "left") {
-                    transform += " scale(-1, 1)";
-                };
-                return transform
-            });
-
-        rectsProGroup
-            .append("path")
-            .attr("class", "element " + object.className)
-            .attr("id", (d) => {
-		if(d.id){
-			return d.id;
-			
-		}else{
-			// add id to object
-			let id = "f_" + object.id + '_' + d.x + '-' + d.y;
-			d.id = id;
-			return id;
-		}
-            })
-            .attr("y", 0)
-            .attr("ry", (d) => this.commons.radius)
-            .attr("rx", (d) => this.commons.radius)
-
-            .attr("d", (d) => this.arrowPath(d))
-            .style("z-index", "13")
-            .style("fill-opacity", (d) => {
-                if (d.opacity) {
-                    return d.opacity
-                } else if (object.opacity) {
-                    return object.opacity
-                } else {
-                    return "0.6"
-                }
-            })
-            .style("fill", (d) => {
-                return d.color || object.color
-            })
-            .style("stroke", (d) => {
-                if ("stroke" in d) {
-                    return d.stroke
-                } else if ("stroke" in object) {
-                    return object.stroke
-                } else {
-                    return d.color
-                }
-            })
-            .call(this.commons.d3helper.tooltip(object));
-
-        rectsProGroup
-            .append("text")
-            .attr("class", "element " + object.className + "Text")
-            .attr("y", (d) => rectHeight / 2)
-            .attr("dy", "0.35em")
-            .style("font-size", "10px")
-            .text((d) => d.label)
-            .style("fill", "rgba(39, 37, 37, 0.9)")
-            .style("z-index", "15")
-            .style("visibility",  (d) => {
-                if (d.label) {
-                    return (this.commons.scaling(d.y) - this.commons.scaling(d.x)) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
-                } else return "hidden";
-            })
-            .call(this.commons.d3helper.tooltip(object));
-
-        this.forcePropagation(rectsProGroup);
-        let uniqueShift = rectHeight > 12 ? rectHeight - 6 : 0;
-        this.commons.YPosition += this.commons.level < 2 ? uniqueShift : (this.commons.level - 1) * rectShift + uniqueShift;
-
-    }
-
     public fillSVGLine(object, position = 0) {
         // if (!object.interpolation) object.interpolation = "curveBasis"; // TODO: not sensitive to interpolation now
         if (object.fill === undefined) object.fill = true;
         let histoG = this.commons.svgContainer.append("g")
-        // necessary id to get height when placing tags
+            // necessary id to get height when placing tags
             .attr("id", () => {return 'c' + object.id + '_container'})
             .attr("class", "lining featureLine")
             .attr("transform", "translate(0," + position + ")")

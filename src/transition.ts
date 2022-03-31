@@ -1,5 +1,4 @@
 import ComputingFunctions from './helper';
-import * as d3 from 'd3';
 
 export class SubfeaturesTransition extends ComputingFunctions {
 
@@ -35,46 +34,6 @@ export class Transition extends ComputingFunctions {
         container.selectAll(".line")
             .attr("d", this.commons.line);
 
-    }
-
-    public arrow(object) {
-      let container = this.commons.svgContainer.select(`#c${object.id}_container`);
-      // line does not require transition
-
-      let transit1, transit2;
-      // group selection
-      transit1 = container.selectAll("." + "arrowfv" + "Group")
-      transit2 = container.selectAll("." + "arrowfv")
-      // transition
-      if (this.commons.animation) {
-          transit1
-              .transition()
-              .duration(500);
-          transit2
-              .transition()
-              .duration(500);
-      }
-      // transition
-      transit1.attr("transform",  (d) => {
-          return "translate(" + this.rectX(d) + ",0)"
-      });
-      transit2.attr("d", (d) => this.arrowPath(d));
-
-      // transition to text
-      container.selectAll("." + object.className + "Text")
-          .attr("transform",  (d) => {
-              let offset = (d.direction === "left" ? this.commons.elementHeight / 2 : 0);
-              if (d.label && this.commons.scaling(d['x'])<0) {
-                  return "translate(" + -this.rectX(d) + offset + ",0)"
-              } else {
-                  return "translate(" + offset + ",0)"
-              }
-          })
-          .style("visibility",  (d) => {
-              if (d.label && this.commons.scaling(d['x'])>0) {
-                  return (this.commons.scaling(d.y) - this.commons.scaling(d['x'])) > d.label.length * 8 && object.height > 11 ? "visible" : "hidden";
-              } else return "hidden";
-          });
     }
 
     public rectangle(object) {
@@ -183,11 +142,11 @@ export class Transition extends ComputingFunctions {
             .attr("x2", (d) => {
                 return this.commons.scaling(d.x)
             })
-            // .attr("y2", (d) => {
-            //     let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
-            //     if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
-            //     return w + 4;
-            // });
+        // .attr("y2", (d) => {
+        //     let w = this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4);
+        //     if (this.commons.scaling(d.x + 0.4) - this.commons.scaling(d.x - 0.4) < 2) w = 2;
+        //     return w + 4;
+        // });
 
     }
 
@@ -223,9 +182,9 @@ export class Transition extends ComputingFunctions {
             .attr("d", this.commons.lineBond.x((d) => {
                     return this.commons.scaling(d['x']);
                 })
-                .y( (d) => {
-                    return -d['y'] * 10 + object.height;
-                })
+                    .y( (d) => {
+                        return -d['y'] * 10 + object.height;
+                    })
             );
         let transit;
         if (this.commons.animation) {
@@ -243,11 +202,12 @@ export class Transition extends ComputingFunctions {
     }
 
     public lineTransition(object) {
-
         let container = this.commons.svgContainer.select(`#c${object.id}_container`);
-
+        const yScores = object.data.map(o => o.y);
+        const maxScore = Math.max(...yScores);
+        const minScore = Math.min(...yScores);
         // keep height
-        this.commons.lineYScale.range([0, -(object.height)]).domain([0, -(object.level)]);
+        this.commons.lineYScale.domain([minScore, maxScore]).range([0, this.commons.step/11]);
         container.selectAll(".line " + object.className)
             .attr("d", (d) => {
                 return this.commons.lineYScale(-d.y) * 10 + object.shift

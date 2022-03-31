@@ -7,23 +7,17 @@
     "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots" : ["./node_modules/@types"],
+    "types" : [
+      "d3",
+      "underscore",
+      "html-to-image"
+    ],
+    "lib": ["es6", "dom", "es2017"],
+    "outDir": "./lib",
+    "allowSyntheticDefaultImports": true
   },
-  "typeRoots" : ["./node_modules/@types"],
-  "types" : [
-    "d3",
-    "underscore",
-    "html-to-image"
-  ],
-  "baseUrl": ".",
-  "paths": {
-    "assets/*": ["assets/*"]
-  },
-  "lib": ["es6", "dom", "es2017"],
-  "outDir": "./lib",
-  "files": [
-        "./src/index.ts"
-  ],
   "include": [
     "src/calculate.ts",
     "src/commons.ts",
@@ -36,5 +30,5 @@
     "src/tooltip.ts",
     "src/transition.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/__tests__/*"]
 }

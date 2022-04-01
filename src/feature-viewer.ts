@@ -1035,7 +1035,7 @@ class FeatureViewer {
             // }
             this.commons.yData.push({
                 id: "fv_sequence",
-                label: "Sequence",
+                label: "",
                 y: this.commons.YPosition - 8,
                 flagLevel: 1
             });

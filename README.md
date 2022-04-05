@@ -1,7 +1,7 @@
 # TypeScript Feature Viewer
 
 This is a code repository for the BioComputingUP Feature Viewer project.
-Full documentation at: http://protein.bio.unipd.it/feature-viewer.
+Full documentation at: https://biocomputingup.github.io/FeatureViewerTypeScript-documentation/.
 
 The Feature-Viewer was published as:
 

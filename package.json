@@ -1,6 +1,6 @@
 {
   "name": "feature-viewer-typescript",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "description": "",
   "main": "index.js",
   "author": "Lisanna Paladin",
@@ -13,7 +13,8 @@
     "lib/**/*",
     "DOC",
     "assets",
-    "fonts"
+    "fonts",
+    "dist"
   ],
   "dependencies": {
     "@types/d3": "5.7.2",

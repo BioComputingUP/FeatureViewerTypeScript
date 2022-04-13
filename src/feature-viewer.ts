@@ -262,7 +262,6 @@ class FeatureViewer {
                     }
                     // vertical flag placement
                     let y = d.y;
-                    if (d.ladderLabel == null) { y = y - 5}
                     return "translate(" + x + "," + y + ")"
 
             })
@@ -284,19 +283,17 @@ class FeatureViewer {
                     }
             });
 
+
+
         // text
         this.commons.yAxisSVGGroup
-            .append("text")
-            .text((d) => d.label)
+            .append("foreignObject")
             // text
             .attr("class", (d) => {
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                     return "yAxis withsubfeatures"
-                } else {
-                    return "yAxis"
-                }
+                } else { return "yAxis" }
             })
-            .attr("font-family", "sans-serif")
             .attr("x", (d) => {
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
@@ -305,29 +302,32 @@ class FeatureViewer {
                 }
                 // horizontal flag placement
                 this.commons.headMargin = 20;
-
-                    if (d.flagLevel) {
-                        this.commons.headMargin = 20 * (d.flagLevel - 1);
-                        return cvm + this.commons.headMargin + 8;
-                    } else {
-                        return cvm + 8
-                    }
+                // if (d.flagLevel) {
+                //     this.commons.headMargin = 20 * (d.flagLevel - 1);
+                //     return cvm + this.commons.headMargin + 8;
+                // } else {
+                //     return cvm + 8
+                // }
             })
             .attr("y", d => {
-                if (d.id == "mycurve" || d.id == "useUniqueId") { return d.y +  this.commons.flagsHeight / 2 + 5}
-                else { return d.y + this.commons.flagsHeight / 2} }
-            )
+                // vertical flag placement
+                return d.y + this.commons.step/6
+            })
             .attr('font-size', '.8125rem')
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
+
                     return this.calcFlagWidth(d);
                 } else {
                     let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth  // 20 + (20 * d.flagLevel) --> 0
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
             })
-            .attr("height", this.commons.step);
+            .attr("height", this.commons.step)
+            .html((d) => {
+                return d.label;
+            });
 
 
         const ladderGroup = this.commons.yAxisSVGGroup

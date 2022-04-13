@@ -7,6 +7,8 @@ import {SubfeaturesTransition, Transition} from "./transition";
 import FillSVG from "./fillsvg";
 import Calculate from "./calculate";
 import Tool from "./tooltip";
+import * as htmlToImage from 'html-to-image';
+import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
 
 // import * as fvstyles from './../assets/fv.scss';
 
@@ -222,18 +224,14 @@ class FeatureViewer {
         this.commons.yAxisSVGGroup
             .append("polygon") // attach a polygon
             .attr("class", (d) => {
-                if (d.ladderLabel == null) {
                     if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                         return "boxshadow Arrow withsubfeatures"
                     } else {
                         return "boxshadow Arrow"
                     }
-                }
             })
             .style("stroke", (d) => {
-                if (d.ladderLabel == null) {
                     return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
-                }
             }) // colour the border if selected
             .attr("points", (d) => {
                 if (d.ladderLabel == null) {
@@ -241,11 +239,13 @@ class FeatureViewer {
                     return this.calculate.yxPoints(d)
                 }
             })
-            .attr("transform", d => "translate(" + (20 * (d.flagLevel - 1))  + ",0)")
+            .attr("transform", (d) => {
+                let y = 0
+                if (d.id == 'mycurve' || d.id == 'useUniqueId') { y = 5 }
+                return "translate(" + (20 * (d.flagLevel - 1))  + ", "+ y + ")"
+            })
             .style("fill", (d) => {
-                if (d.ladderLabel == null) {
                     return d.flagColor ? d.flagColor : this.commons.viewerOptions.flagColor;
-                }
             });
 
         // foreingObject for chevron
@@ -253,7 +253,6 @@ class FeatureViewer {
         this.commons.yAxisSVGGroup
             .append("g") // position
             .attr("transform", (d) => {
-                if (d.ladderLabel == null) {
                     let x = 0;
                     // horizontal flag placement
                     this.commons.headMargin = 20;
@@ -263,35 +262,32 @@ class FeatureViewer {
                     }
                     // vertical flag placement
                     let y = d.y;
+                    if (d.ladderLabel == null) { y = y - 5}
                     return "translate(" + x + "," + y + ")"
-                }
 
             })
             .append("path")
             .attr("id", "chevron")
             .attr("class", (d) => {
-                if (d.ladderLabel == null) {
                     if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                         return "chevron withsubfeatures"
                     } else {
                         return "chevron"
                     }
-                }
             })
             .attr("fill", "rgba(39, 37, 37, 0.71)")
             .attr("d", (d) => {
-                if (d.ladderLabel == null) {
                     if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                         if (d.isOpen) {return this.commons.down_chevron} else {return this.commons.right_chevron}
                     } else {
                         return ''
                     }
-                }
             });
 
         // text
         this.commons.yAxisSVGGroup
-            .append("foreignObject")
+            .append("text")
+            .text((d) => d.label)
             // text
             .attr("class", (d) => {
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
@@ -300,8 +296,8 @@ class FeatureViewer {
                     return "yAxis"
                 }
             })
+            .attr("font-family", "sans-serif")
             .attr("x", (d) => {
-
                 let cvm = 0;
                 if (this.commons.viewerOptions.showSubFeatures && d.hasSubFeatures) {
                     // chevron margin, placed rightly
@@ -309,34 +305,29 @@ class FeatureViewer {
                 }
                 // horizontal flag placement
                 this.commons.headMargin = 20;
-                if (d.ladderLabel == null) {
+
                     if (d.flagLevel) {
                         this.commons.headMargin = 20 * (d.flagLevel - 1);
                         return cvm + this.commons.headMargin + 8;
                     } else {
                         return cvm + 8
                     }
-                }
             })
             .attr("y", d => {
-                // vertical flag placement
-                return d.y + this.commons.step/6
-            })
+                if (d.id == "mycurve" || d.id == "useUniqueId") { return d.y +  this.commons.flagsHeight / 2 + 5}
+                else { return d.y + this.commons.flagsHeight / 2} }
+            )
             .attr('font-size', '.8125rem')
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
-
                     return this.calcFlagWidth(d);
                 } else {
                     let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth  // 20 + (20 * d.flagLevel) --> 0
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
             })
-            .attr("height", this.commons.step)
-            .html((d) => {
-                return d.label;
-            });
+            .attr("height", this.commons.step);
 
 
         const ladderGroup = this.commons.yAxisSVGGroup
@@ -894,7 +885,7 @@ class FeatureViewer {
                     .attr("class", "mybuttoncircle")
                     .attr("id", "downloadButton")
                     .on("click", () => {
-                        this.downloadPNG()
+                        this.downloadSvg()
                     })
                     // draw icon
                     .append("svg")
@@ -949,13 +940,6 @@ class FeatureViewer {
             });
 
         this.commons.svgElement = d3.select(`#${this.divId}`).select('svg').node();
-
-
-        console.log(this.commons.viewerOptions.margin.left)
-        console.log(this.commons.viewerOptions.margin.top)
-
-
-        console.log(this.commons.viewerOptions.margin.left)
 
 
         // features track box
@@ -1120,7 +1104,7 @@ class FeatureViewer {
         }
 
         this.fillSVG.updateXAxis(this.commons.YPosition);
-        this.calculate.updateSVGHeight(this.commons.YPosition);
+        this.calculate.updateSVGHeight(this.commons.YPosition + 5);
 
         // update brush
         if (this.commons.viewerOptions.brushActive) {
@@ -1300,45 +1284,31 @@ class FeatureViewer {
         this.drawFeatures()
     }
 
-    public downloadJpeg() {
+    public downloadSvg() {
 
-        //let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
-        let svg_el = document.getElementById(this.divId);
-        let filename = "feature_viewer.jpeg";
+        let svg_el = document.getElementById('svgContent')
+        let filename = "feature_viewer.svg";
 
-        // htmlToImage.toJpeg(svg_el, {quality: 0.95})
+        // htmlToImage.toJpeg(document.getElementById(this.divId), { quality: 0.95 })
         //     .then(function (dataUrl) {
         //         var link = document.createElement('a');
         //         link.download = filename;
         //         link.href = dataUrl;
-        //         document.body.appendChild(link);
         //         link.click();
-        //     })
-        //     .catch(function (error) {
-        //         console.error('Error in Jpeg Image download', error);
         //     });
-        // screenshot(svg_el).then((url) => {
-        //     download(url, filename)
-        // })
 
-    }
 
-    public downloadPNG() {
-        //let svg_el = this.commons.svgContainer.getElementsById("#svgContent");
-        let svg_el = document.getElementById(this.divId)
-        let filename = "feature_viewer.png";
-
-        // htmlToImage.toPng(svg_el)
-        //     .then(function (dataUrl) {
-        //         console.log('test')
-        //         var img = new Image();
-        //         img.src = dataUrl;
-        //         document.body.appendChild(img);
-        //
-        //     })
-        //     .catch(function (error) {
-        //         console.error('Error in PNG Image download', error);
-        //     });
+        svg_el.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        let svgData = svg_el.outerHTML;
+        let preface = '<?xml version="1.0" standalone="no"?>\r\n';
+        let svgBlob = new Blob([preface, svgData], {type: "image/svg+xml;charset=utf-8"});
+        let svgUrl = URL.createObjectURL(svgBlob);
+        let downloadLink = document.createElement("a");
+        downloadLink.href = svgUrl;
+        downloadLink.download = filename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
 
     }
 

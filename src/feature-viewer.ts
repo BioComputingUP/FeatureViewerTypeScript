@@ -302,12 +302,14 @@ class FeatureViewer {
                 }
                 // horizontal flag placement
                 this.commons.headMargin = 20;
-                // if (d.flagLevel) {
-                //     this.commons.headMargin = 20 * (d.flagLevel - 1);
-                //     return cvm + this.commons.headMargin + 8;
-                // } else {
-                //     return cvm + 8
-                // }
+                if (d.ladderLabel == null) {
+                    if (d.flagLevel) {
+                        this.commons.headMargin = 20 * (d.flagLevel - 1);
+                        return cvm + this.commons.headMargin + 8;
+                    } else {
+                        return cvm + 8
+                    }
+                }
             })
             .attr("y", d => {
                 // vertical flag placement

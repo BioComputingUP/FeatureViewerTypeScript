@@ -434,8 +434,7 @@ class FillSVG extends ComputingFunctions {
         // remove eventual sequence still there (in transitions)
         this.commons.svgContainer.selectAll(".mySequence").remove();
         //Create group of sequence
-        let sequenceAAs = this.commons.svgContainer.append("g")
-            .attr("class", "mySequence sequenceGroup");
+        let sequenceAAs = this.commons.svgContainer.append("g").attr("class", "mySequence sequenceGroup");
         sequenceAAs
             .selectAll(".AA")
             .data(seq)
@@ -453,7 +452,9 @@ class FillSVG extends ComputingFunctions {
             .attr("font-family", "monospace")
             .text((d) => {
                 return d
+
             })
+
     }
 
     public sequenceLine() {

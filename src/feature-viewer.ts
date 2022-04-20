@@ -25,6 +25,7 @@ class FeatureViewer {
     private calculate: Calculate;
     private tool: Tool;
     private lastHighlight: any;
+    private lastLen: number;
 
 
     private parseUserOptions(options: UserOptions): void {
@@ -313,7 +314,9 @@ class FeatureViewer {
             })
             .attr("y", d => {
                 // vertical flag placement
-                return d.y + this.commons.step/6
+                let y = d.y + this.commons.step/6
+                if (d.id == 'mycircle') { y = y - 5}
+                return y
             })
             .attr('font-size', '.8125rem')
             .attr("width", (d) => {
@@ -444,8 +447,10 @@ class FeatureViewer {
                     start = 0
                 }
                 let extentLength = end - start;
-                let seqCheck = this.calculate.displaySequence(extentLength);
+                this.lastLen = extentLength;
 
+
+                let seqCheck = this.calculate.displaySequence(extentLength);
                 if (extentLength > this.commons.viewerOptions.zoomMax) {
                     this.commons.current_extend = {
                         length: extentLength,
@@ -478,7 +483,6 @@ class FeatureViewer {
                             this.fillSVG.sequenceLine();
                         }
                         else if (seqCheck === true) {
-
                             this.commons.seqShift = start;
                             this.fillSVG.sequence(this.sequence.substring(start, end), this.commons.seqShift);
                         }
@@ -620,14 +624,20 @@ class FeatureViewer {
             this.commons.scalingPosition.domain([0, this.commons.viewerOptions.width]);
 
             // update seq visualization
-            let seq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
+            let seq = this.calculate.displaySequence(this.lastLen);
+            // let seq = this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start);
             this.commons.svgContainer.select(".mySequence").remove();
             if (this.commons.viewerOptions.showSequence) {
-                if (seq === false) {
+                if (this.getCurrentZoom() == undefined || seq === false) {
                     this.fillSVG.sequenceLine();
-                } else if (seq === true) {
+                } else if (this.getCurrentZoom() && seq) {
                     this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
                 }
+                // if (seq === false) {
+                //     this.fillSVG.sequenceLine();
+                // } else if (seq === true) {
+                //     this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
+                // }
             }
             if (this.commons.animation) {
                 // @ts-ignore

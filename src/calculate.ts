@@ -154,7 +154,7 @@ class Calculate {
 
     public displaySequence (seq) {
         // checks if dotted sequence or letters
-        return this.commons.viewerOptions.width / seq > 5;
+        return this.commons.viewerOptions.width / seq > 8; // regulate sequence letter distance
     };
 
     public updateSVGHeight(position) {

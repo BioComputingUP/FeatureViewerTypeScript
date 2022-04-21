@@ -323,10 +323,11 @@ class FeatureViewer {
             .attr("width", (d) => {
                 // text only if space is enough
                 if (this.commons.viewerOptions.mobileMode) {
-
                     return this.calcFlagWidth(d);
                 } else {
+                    console.log('2')
                     let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth  // 20 + (20 * d.flagLevel) --> 0
+                    console.log(this.commons.viewerOptions.margin.left - margin)
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
             })
@@ -535,10 +536,15 @@ class FeatureViewer {
         let flags_text = d3.select(`#${this.divId}`).selectAll(".yAxis")
             .attr("width", (d) => {
                 // text only if space is enough
+
                 if (this.commons.viewerOptions.mobileMode) {
+                    console.log('mobile1')
                     // text width depends on mobile width, flaglevel and presence of subfeatures icon
                     return this.calcFlagWidth(d);
                 } else {
+                    console.log('mobile2')
+                    console.log(this.commons.viewerOptions.ladderSpacing)
+                    console.log(this.commons.viewerOptions.maxDepth)
                     let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth   // 20 + (20 * d['flagLevel']) --> 0
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
@@ -805,6 +811,7 @@ class FeatureViewer {
 
         // Create SVG
         if (this.commons.viewerOptions.toolbar) {
+            console.log('createsvg')
             let headerOptions = document.querySelector(div + " .svgHeader") ? d3.select(div + " .svgHeader") : d3.select(div).append("div").attr("class", "svgHeader");
 
             if (this.commons.viewerOptions.toolbarPosition) {
@@ -1005,6 +1012,7 @@ class FeatureViewer {
         });
 
         if (this.commons.viewerOptions.showSequence) {
+            console.log('showseq')
             if (this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
@@ -1012,7 +1020,7 @@ class FeatureViewer {
                 this.fillSVG.sequenceLine();
             }
             // check if sequence already initialized, alse add it to yData
-            if (this.commons.yData.filter((e) => {e.id === 'fv_sequence'}).length === 0) {
+            // if (this.commons.yData.filter((e) => {e.id === 'fv_sequence'}).length === 0) {
                 // features
                 // this.commons.features.push({
                 //     data: this.sequence,
@@ -1024,6 +1032,7 @@ class FeatureViewer {
                 // });
                 // yData
                 if (this.commons.viewerOptions.showSequenceLabel) {
+                    console.log('seqlabel')
                     this.commons.yData.push({
                         id: "fv_sequence",
                         label: "Sequence",
@@ -1031,7 +1040,7 @@ class FeatureViewer {
                         flagLevel: 1
                     });
                 }
-            }
+            // }
             // this.commons.yData.push({
             //     id: "fv_sequence",
             //     label: "",

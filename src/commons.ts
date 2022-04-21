@@ -45,6 +45,7 @@ class Commons {
         height: null,
         zoomMax: 10,
         unit: null,
+        maxDepth: 3,
         animation: true,
         toolbar: true,
         bubbleHelp: true,

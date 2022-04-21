@@ -17,6 +17,7 @@ class Commons {
     };
     public viewerOptions: ViewerOptions = {
         showSequence: true,
+        showSequenceLabel: true,
         brushActive: false,
         verticalLine: false,
         dottedSequence: true,

@@ -33,6 +33,7 @@ class FeatureViewer {
         const simple_keys = [
             'showAxis',
             'showSequence',
+            'showSequenceLabel',
             'brushActive',
             'toolbar',
             'toolbarPosition',
@@ -1011,30 +1012,32 @@ class FeatureViewer {
                 this.fillSVG.sequenceLine();
             }
             // check if sequence already initialized, alse add it to yData
-            // if (this.commons.yData.filter((e) => {e.id === 'fv_sequence'}).length === 0) {
-            //     // features
-            //     // this.commons.features.push({
-            //     //     data: this.sequence,
-            //     //     label: "Sequence",
-            //     //     className: "AA",
-            //     //     color: "black",
-            //     //     type: "sequence",
-            //     //     id: "fv_sequence"
-            //     // });
-            //     // yData
-            //     this.commons.yData.push({
-            //         id: "fv_sequence",
-            //         label: "Sequence",
-            //         y: this.commons.YPosition - 8,
-            //         flagLevel: 1
-            //     });
-            // }
-            this.commons.yData.push({
-                id: "fv_sequence",
-                label: "",
-                y: this.commons.YPosition - 8,
-                flagLevel: 1
-            });
+            if (this.commons.yData.filter((e) => {e.id === 'fv_sequence'}).length === 0) {
+                // features
+                // this.commons.features.push({
+                //     data: this.sequence,
+                //     label: "Sequence",
+                //     className: "AA",
+                //     color: "black",
+                //     type: "sequence",
+                //     id: "fv_sequence"
+                // });
+                // yData
+                if (this.commons.viewerOptions.showSequenceLabel) {
+                    this.commons.yData.push({
+                        id: "fv_sequence",
+                        label: "Sequence",
+                        y: this.commons.YPosition - 10,
+                        flagLevel: 1
+                    });
+                }
+            }
+            // this.commons.yData.push({
+            //     id: "fv_sequence",
+            //     label: "",
+            //     y: this.commons.YPosition - 8,
+            //     flagLevel: 1
+            // });
         }
 
         this.fillSVG.addXAxis(this.commons.YPosition);

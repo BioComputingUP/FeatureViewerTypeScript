@@ -7,6 +7,7 @@ export interface UserOptions {
   breakpoint?: number,
   showAxis?: boolean,
   showSequence?: boolean,
+  showSequenceLabel?: boolean,
   brushActive?: boolean,
   toolbar?: boolean,
   toolbarPosition?: string,
@@ -24,6 +25,7 @@ export interface UserOptions {
 
 export interface ViewerOptions {
   showSequence: boolean,
+  showSequenceLabel?: boolean,
   brushActive: boolean,
   verticalLine: boolean,
   dottedSequence: boolean,
@@ -74,7 +76,7 @@ export interface FeaturesList extends Array<FeatureObject>{}
 export interface FeatureObject {
   id: string,
   type: string // "rect" | "path" | "curve" | "unique" | "circle" | "sequence" | "lollipop",
-  data: Array<FeatureData>,
+  data: string,
   parentId?: any,
   label?: string,
   className?: string,

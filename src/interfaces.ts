@@ -76,7 +76,7 @@ export interface FeaturesList extends Array<FeatureObject>{}
 export interface FeatureObject {
   id: string,
   type: string // "rect" | "path" | "curve" | "unique" | "circle" | "sequence" | "lollipop",
-  data: string,
+  data: Array<FeatureData> | string,
   parentId?: any,
   label?: string,
   className?: string,

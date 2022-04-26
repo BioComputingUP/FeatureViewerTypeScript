@@ -325,9 +325,7 @@ class FeatureViewer {
                 if (this.commons.viewerOptions.mobileMode) {
                     return this.calcFlagWidth(d);
                 } else {
-                    console.log('2')
                     let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth  // 20 + (20 * d.flagLevel) --> 0
-                    console.log(this.commons.viewerOptions.margin.left - margin)
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
             })
@@ -538,13 +536,9 @@ class FeatureViewer {
                 // text only if space is enough
 
                 if (this.commons.viewerOptions.mobileMode) {
-                    console.log('mobile1')
                     // text width depends on mobile width, flaglevel and presence of subfeatures icon
                     return this.calcFlagWidth(d);
                 } else {
-                    console.log('mobile2')
-                    console.log(this.commons.viewerOptions.ladderSpacing)
-                    console.log(this.commons.viewerOptions.maxDepth)
                     let margin = 20 + this.commons.viewerOptions.ladderSpacing * this.commons.viewerOptions.maxDepth   // 20 + (20 * d['flagLevel']) --> 0
                     return this.commons.viewerOptions.margin.left - margin; // chevron margin and text indent
                 }
@@ -811,7 +805,6 @@ class FeatureViewer {
 
         // Create SVG
         if (this.commons.viewerOptions.toolbar) {
-            console.log('createsvg')
             let headerOptions = document.querySelector(div + " .svgHeader") ? d3.select(div + " .svgHeader") : d3.select(div).append("div").attr("class", "svgHeader");
 
             if (this.commons.viewerOptions.toolbarPosition) {
@@ -1012,7 +1005,6 @@ class FeatureViewer {
         });
 
         if (this.commons.viewerOptions.showSequence) {
-            console.log('showseq')
             if (this.calculate.displaySequence(this.commons.viewerOptions.offset.end - this.commons.viewerOptions.offset.start)) {
                 this.fillSVG.sequence(this.sequence.substring(this.commons.viewerOptions.offset.start, this.commons.viewerOptions.offset.end), this.commons.viewerOptions.offset.start);
             }
@@ -1032,7 +1024,6 @@ class FeatureViewer {
                 // });
                 // yData
                 if (this.commons.viewerOptions.showSequenceLabel) {
-                    console.log('seqlabel')
                     this.commons.yData.push({
                         id: "fv_sequence",
                         label: "Sequence",

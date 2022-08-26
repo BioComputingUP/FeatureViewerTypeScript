@@ -370,14 +370,14 @@ class FeatureViewer {
             }
         })
 
-        //
-        // .attr('width', this.commons.viewerOptions.ladderWidth).attr('height', this.commons.viewerOptions.ladderHeight)
-        // .attr('fill', ([i, d]) => {
-        //     return  (d.id !== 'fv_sequence' && i===d.flagLevel-1) ? d.ladderColor : 'rgba(255, 255, 255, 0)'
-        // })
-        // .attr('class', d => `ladder`)
-        // .attr('rx', 0)
-        // .attr('ry', 2)
+
+        .attr('width', this.commons.viewerOptions.ladderWidth).attr('height', this.commons.viewerOptions.ladderHeight)
+        .attr('fill', ([i, d]) => {
+            return  (d.id !== 'fv_sequence' && i===d.flagLevel-1) ? d.ladderColor : 'rgba(255, 255, 255, 0)'
+        })
+        .attr('class', d => `ladder`)
+        .attr('rx', 0)
+        .attr('ry', 2)
 
         ladderGroup.append('text')
             .attr('transform', ([i, d]) => {

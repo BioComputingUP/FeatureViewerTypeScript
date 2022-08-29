@@ -257,10 +257,10 @@ class FeatureViewer {
             .attr("transform", (d) => {
                     let x = 0;
                     // horizontal flag placement
-                    this.commons.headMargin = 20;
+                    this.commons.headMargin = 0;//20
                     if (d.flagLevel) {
-                        this.commons.headMargin = 20 * (d.flagLevel - 1);
-                        x = this.commons.headMargin + 5;
+                        this.commons.headMargin = 0 * (d.flagLevel - 1);//20*
+                        // x = this.commons.headMargin + 5;// uncommented
                     }
                     // vertical flag placement
                     let y = d.y;

@@ -108,6 +108,7 @@ export interface SideBarObject {
   tooltip?: string, // or html
   content?: string,
   type?: string,
+  width?: number,
   label?: string | number
 }
 

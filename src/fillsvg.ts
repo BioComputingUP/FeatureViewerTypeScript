@@ -416,7 +416,11 @@ class FillSVG extends ComputingFunctions {
                     // objectPos += 50;
                     // get width of the drawn object
                     try {
-                        let contentwidth = (<HTMLElement>d3.select(`#${bt.id}`).select('*').node()).getBoundingClientRect().width
+                        let contentwidth = 0;
+                        if (bt.width)
+                            contentwidth = bt.width;
+                        else
+                            contentwidth = (<HTMLElement>d3.select(`#${bt.id}`).select('*').node()).getBoundingClientRect().width
                         objectPos += contentwidth + 5;
                     } catch (e) {
                         objectPos += 100;

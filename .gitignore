@@ -6,5 +6,6 @@ node_modules
 dist
 # Ignore types
 **/*.d.ts
-# Ignore map files
+# Ignore .js files
 **/*.js.map
+**/*.js

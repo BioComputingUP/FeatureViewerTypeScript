@@ -5,6 +5,6 @@ node_modules
 # Exclude built project
 dist
 # Ignore types
-*.d.ts
+**/*.d.ts
 # Ignore map files
-*.js.map
+**/*.js.map

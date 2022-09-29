@@ -1,5 +1,10 @@
-node_modules
-node_modules_bkp
+# Exclude WebStorm project files
 .idea
-lib
-package-lock.json
+# Exclude node modules
+node_modules
+# Exclude built project
+dist
+# Ignore types
+*.d.ts
+# Ignore map files
+*.js.map

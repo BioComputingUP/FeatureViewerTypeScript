@@ -8,7 +8,6 @@ export declare class SubfeaturesTransition extends ComputingFunctions {
 }
 export declare class Transition extends ComputingFunctions {
     basalLine(object: any): void;
-    arrow(object: any): void;
     rectangle(object: any): void;
     multiRec(object: any): void;
     unique(object: any): void;

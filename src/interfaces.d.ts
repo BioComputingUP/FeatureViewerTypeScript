@@ -6,6 +6,7 @@ export interface UserOptions {
     breakpoint?: number;
     showAxis?: boolean;
     showSequence?: boolean;
+    showSequenceLabel?: boolean;
     brushActive?: boolean;
     toolbar?: boolean;
     toolbarPosition?: string;
@@ -18,9 +19,11 @@ export interface UserOptions {
     animation?: boolean;
     unit?: string;
     backgroundcolor?: string;
+    maxDepth?: number;
 }
 export interface ViewerOptions {
     showSequence: boolean;
+    showSequenceLabel?: boolean;
     brushActive: boolean;
     verticalLine: boolean;
     dottedSequence: boolean;
@@ -70,8 +73,7 @@ export interface FeaturesList extends Array<FeatureObject> {
 export interface FeatureObject {
     id: string;
     type: string;
-    variant?: string;
-    data: Array<FeatureData>;
+    data: Array<FeatureData> | string;
     parentId?: any;
     label?: string;
     className?: string;
@@ -101,6 +103,7 @@ export interface SideBarObject {
     tooltip?: string;
     content?: string;
     type?: string;
+    width?: number;
     label?: string | number;
 }
 export interface FeatureViewerLogger {

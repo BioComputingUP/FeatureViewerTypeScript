@@ -8,4 +8,4 @@ dist
 **/*.d.ts
 # Ignore .js files
 **/*.js.map
-**/*.js
+src/*.js

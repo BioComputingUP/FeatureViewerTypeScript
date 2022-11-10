@@ -484,7 +484,7 @@ class FillSVG extends ComputingFunctions {
                 .style("stroke-opacity", 0);
 
             dottedSeqLine
-                .transition()
+                // .transition()
                 .duration(500)
                 .style("stroke-opacity", 1);
         }

@@ -33,13 +33,11 @@ foreignObject > body {
 .mybutton {
   -moz-border-radius: 10px;
   -webkit-border-radius: 10px;
-  border-radius: 10px;
-  /* future proofing */
-  -khtml-border-radius: 10px;
-  /* for old Konqueror browsers */
+  border-radius: 10px; /* future proofing */
+  -khtml-border-radius: 10px; /* for old Konqueror browsers */
   background: darkgrey;
   border: none;
-  color: black;
+  color: rgb(0, 0, 0);
   height: 30px;
   min-width: 36px;
   outline: none;
@@ -109,22 +107,16 @@ foreignObject > body {
 }
 
 .pageoverlay {
-  position: fixed;
-  /* Sit on top of the page content */
-  width: 100%;
-  /* Full width (cover the whole page) */
-  height: 100%;
-  /* Full height (cover the whole page) */
+  position: fixed; /* Sit on top of the page content */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
-  /* Black background with opacity */
-  z-index: 2;
-  /* Specify a stack order in case you're using a different order for other elements */
-  cursor: pointer;
-  /* Add a pointer on hover */
+  background-color: rgba(0, 0, 0, 0.3); /* Black background with opacity */
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
 }
 
 /*# sourceMappingURL=fv.css.map */

@@ -483,10 +483,10 @@ class FillSVG extends ComputingFunctions {
                 .style("stroke-width", "1px")
                 .style("stroke-opacity", 0);
 
-            // dottedSeqLine
-                // .transition()
-                // .duration(500)
-                // .style("stroke-opacity", 1);
+            dottedSeqLine
+                .transition()
+                .duration(500)
+                .style("stroke-opacity", 1);
         }
     }
 

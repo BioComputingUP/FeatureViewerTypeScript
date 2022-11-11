@@ -19,6 +19,10 @@ const config = {
     filename: "[name].js",
     // Define output directory
     path: path.resolve(__dirname, "dist"),
+    // Define a library (Universal Module Definition)
+    library: "feature-viewer-typescript",
+    libraryTarget: "umd",
+    umdNamedDefine: true,
     // Clean the output directory before emit.
     clean: true,
   },

@@ -1,34 +1,21 @@
 {
   "compilerOptions": {
+    "strict": false,
     "declaration": true,
-    "target": "es2015",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "typeRoots" : ["./node_modules/@types"],
-    "types" : [
-      "d3",
-      "underscore",
-      "html-to-image"
-    ],
-    "lib": ["es6", "dom", "es2017"],
-    "outDir": "./lib",
-    "allowSyntheticDefaultImports": true
+    "allowJs": true,
+    // Module defines the output module resolution system
+    "module": "es6",
+    // Target defines the compiled code targets
+    "target": "es6",
+    // Skip type checking all .d.ts files.
+    "skipLibCheck": true
   },
-  "include": [
-    "src/calculate.ts",
-    "src/commons.ts",
-    "src/custom-d3.ts",
-    "src/feature-viewer.ts",
-    "src/fillsvg.ts",
-    "src/helper.ts",
-    "src/index.ts",
-    "src/interfaces.ts",
-    "src/tooltip.ts",
-    "src/transition.ts"
-  ],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  // Define files to be included
+  "files": ["./index.ts", "./example.ts"],
+  // Include sources
+  "include": ["src"],
+  // Exclude node modules
+  "exclude": ["node_modules"]
 }

@@ -7,12 +7,13 @@ import {SubfeaturesTransition, Transition} from "./transition";
 import FillSVG from "./fillsvg";
 import Calculate from "./calculate";
 import Tool from "./tooltip";
-import * as htmlToImage from 'html-to-image';
-import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
+// import * as htmlToImage from 'html-to-image';
+// import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
 
 // import * as fvstyles from './../assets/fv.scss';
 
-
+// Import styles
+import './styles/styles.scss';
 
 class FeatureViewer {
     private commons: Commons;
@@ -1765,5 +1766,4 @@ class FeatureViewer {
     }
 }
 
-(window as any).FeatureViewer = FeatureViewer;
 export {FeatureViewer};

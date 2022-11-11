@@ -8,6 +8,7 @@
     "build": "webpack --mode=production --node-env=production",
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
+    "prepare": "echo \"Building...\" && npm run build",
     "watch": "webpack --watch",
     "serve": "webpack serve"
   },

@@ -5,7 +5,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 // Define whether current environment is production or not
-const isProduction = process.env.NODE_ENV == "production";
+const isProduction = process.env.NODE_ENV === "production";
 // Main configuration options
 const config = {
   // Entry point for the app
@@ -44,8 +44,7 @@ const config = {
       {
         test: /\.(ts|tsx)$/i,
         loader: "ts-loader",
-        include: ["/src"],
-        exclude: ["/node_modules"],
+        exclude: /node_modules/,
       },
       {
         test: /\.s[ac]ss$/i,

@@ -10,8 +10,8 @@
     // Target defines the compiled code targets
     "target": "es6",
   },
-  // Define files to be compiled
-  "files": ["./index.ts", "./example.ts"],
+//  // Define files to be compiled
+//  "files": ["./index.ts", "./example.ts"],
   // Include source files
   "include": ["src"],
   // Exclude dependencies

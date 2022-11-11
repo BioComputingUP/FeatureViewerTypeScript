@@ -9,11 +9,13 @@
     "module": "es6",
     // Target defines the compiled code targets
     "target": "es6",
+    // Skip type checking all .d.ts files.
+    "skipLibCheck": true
   },
-//  // Define files to be compiled
-//  "files": ["./index.ts", "./example.ts"],
-  // Include source files
+  // Define files to be included
+  "files": ["./index.ts", "./example.ts"],
+  // Include sources
   "include": ["src"],
-  // Exclude dependencies
+  // Exclude node modules
   "exclude": ["node_modules"]
 }

@@ -1766,5 +1766,4 @@ class FeatureViewer {
     }
 }
 
-(window as any).FeatureViewer = FeatureViewer;
 export {FeatureViewer};

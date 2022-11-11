@@ -2,7 +2,7 @@
   "name": "feature-viewer-typescript",
   "version": "1.0.0",
   "description": "Feature Viewer (Typescript)",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode=production --node-env=production",

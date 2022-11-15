@@ -1,6 +1,6 @@
 {
   "name": "feature-viewer-typescript",
-  "version": "1.0.0",
+  "version": "2.3.20",
   "description": "Feature Viewer (Typescript)",
   "main": "./dist/index.js",
   "scripts": {

@@ -28,6 +28,23 @@ window.onload = () => {
     // Define optional features
     [
         {
+            type: 'curve',
+            id: 'Curve1',
+            label: 'Random values',
+            color: 'red',
+            data: Array.from(new Array(sequence.length), (x, i) => ({x: i + 1, y: Math.random()})),
+            subfeatures: [
+                {
+                    type: 'curve',
+                    id: 'Curve2',
+                    label: 'Random values',
+                    color: 'blue',
+                    height: 1,
+                    data: Array.from(new Array(sequence.length), (x, i) => ({x: i + 1, y: Math.random() /2 }))
+                }
+            ]
+        },
+        {
             type: 'rect',
             id: 'Degrons',
             label: 'Degrons',
@@ -82,6 +99,6 @@ window.onload = () => {
             label: 'Missense mutations',
             color:'grey',
             data: [{"x": 132, "y": 0.1, "color": "#00008b", "tooltip": "L132R", "stroke": "black"}, {"x": 180, "y": 0.1, "color": "#00008b", "tooltip": "A180T", "stroke": "black"}, {"x": 354, "y": 0.1, "color": "#00008b", "tooltip": "T354A", "stroke": "black"}, {"x": 456, "y": 0.1, "color": "#00008b", "tooltip": "G456E", "stroke": "black"}, {"x": 119, "y": 0.1, "color": "#00008b", "tooltip": "T119S", "stroke": "black"}, {"x": 133, "y": 0.1, "color": "#00008b", "tooltip": "Q133H", "stroke": "black"}, {"x": 501, "y": 0.1, "color": "#00008b", "tooltip": "L501I", "stroke": "black"}, {"x": 209, "y": 0.2, "color": "#00008b", "tooltip": "Q209L Q209H", "stroke": "black"}, {"x": 390, "y": 0.1, "color": "#00008b", "tooltip": "T390I", "stroke": "black"}, {"x": 436, "y": 0.1, "color": "#00008b", "tooltip": "S436T", "stroke": "black"}, {"x": 383, "y": 0.2, "color": "#00008b", "tooltip": "D383H D383G", "stroke": "black"}, {"x": 279, "y": 0.1, "color": "#00008b", "tooltip": "V279L", "stroke": "black"}, {"x": 127, "y": 0.1, "color": "#00008b", "tooltip": "S127F", "stroke": "black"}, {"x": 396, "y": 0.1, "color": "#00008b", "tooltip": "E396K", "stroke": "black"}, {"x": 478, "y": 0.1, "color": "#00008b", "tooltip": "L478F", "stroke": "black"}, {"x": 459, "y": 0.1, "color": "#00008b", "tooltip": "E459K", "stroke": "black"}, {"x": 399, "y": 0.2, "color": "#00008b", "tooltip": "D399G D399H", "stroke": "black"}, {"x": 488, "y": 0.1, "color": "#00008b", "tooltip": "S488Y", "stroke": "black"}, {"x": 124, "y": 0.2, "color": "#00008b", "tooltip": "R124P R124Q", "stroke": "black"}, {"x": 371, "y": 0.1, "color": "#00008b", "tooltip": "S371F", "stroke": "black"}, {"x": 145, "y": 0.1, "color": "#00008b", "tooltip": "T145S", "stroke": "black"}, {"x": 106, "y": 0.1, "color": "#00008b", "tooltip": "R106G", "stroke": "black"}, {"x": 225, "y": 0.1, "color": "#00008b", "tooltip": "M225I", "stroke": "black"}, {"x": 151, "y": 0.1, "color": "#00008b", "tooltip": "P151A", "stroke": "black"}, {"x": 61, "y": 0.1, "color": "#00008b", "tooltip": "S61W", "stroke": "black"}, {"x": 231, "y": 0.1, "color": "#00008b", "tooltip": "P231S", "stroke": "black"}, {"x": 367, "y": 0.1, "color": "#00008b", "tooltip": "S367F", "stroke": "black"}, {"x": 429, "y": 0.1, "color": "#00008b", "tooltip": "I429L", "stroke": "black"}, {"x": 167, "y": 0.1, "color": "#00008b", "tooltip": "I167T", "stroke": "black"}, {"x": 306, "y": 0.1, "color": "#00008b", "tooltip": "M306I", "stroke": "black"}, {"x": 427, "y": 0.1, "color": "#00008b", "tooltip": "D427H", "stroke": "black"}, {"x": 210, "y": 0.1, "color": "#00008b", "tooltip": "M210I", "stroke": "black"}, {"x": 73, "y": 0.1, "color": "#00008b", "tooltip": "M73I", "stroke": "black"}, {"x": 460, "y": 0.1, "color": "#00008b", "tooltip": "G460E", "stroke": "black"}, {"x": 481, "y": 0.1, "color": "#00008b", "tooltip": "D481H", "stroke": "black"}, {"x": 234, "y": 0.1, "color": "#00008b", "tooltip": "D234H", "stroke": "black"}, {"x": 319, "y": 0.1, "color": "#00008b", "tooltip": "R319Q", "stroke": "black"}, {"x": 162, "y": 0.1, "color": "#00008b", "tooltip": "Q162R", "stroke": "black"}, {"x": 125, "y": 0.1, "color": "#00008b", "tooltip": "A125G", "stroke": "black"}, {"x": 266, "y": 0.1, "color": "#00008b", "tooltip": "R266C", "stroke": "black"}, {"x": 166, "y": 0.1, "color": "#00008b", "tooltip": "E166G", "stroke": "black"}, {"x": 246, "y": 0.1, "color": "#00008b", "tooltip": "I246M", "stroke": "black"}],
-        }
+        },
     ]);
 };
